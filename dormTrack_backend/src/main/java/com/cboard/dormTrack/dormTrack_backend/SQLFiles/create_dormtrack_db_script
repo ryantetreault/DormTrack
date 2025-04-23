@@ -1,0 +1,395 @@
+DROP DATABASE IF EXISTS DormTrack_db;
+CREATE DATABASE DormTrack_db;
+USE DormTrack_db;
+
+
+CREATE TABLE student (
+  student_id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  gender ENUM('M', 'F') NOT NULL,
+  year INT NOT NULL,
+  email VARCHAR(100) NOT NULL
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE dorm (
+  dorm_id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  location VARCHAR(100) NOT NULL,
+  total_floors INT NOT NULL
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE room (
+  room_id INT PRIMARY KEY AUTO_INCREMENT,
+  dorm_id INT,
+  floor INT NOT NULL,
+  capacity INT NOT NULL,
+  current_occupancy INT NOT NULL,
+
+  CONSTRAINT fk_room_dorm FOREIGN KEY (dorm_id) REFERENCES dorm(dorm_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE room_assignment (
+  assignment_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  room_id INT NOT NULL,
+  date_assigned DATE NOT NULL,
+  date_vacated DATE,
+
+  CONSTRAINT fk_ra_student FOREIGN KEY (student_id) REFERENCES student(student_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+  CONSTRAINT fk_ra_room FOREIGN KEY (room_id) REFERENCES room(room_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE maintenance_request (
+  request_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  room_id INT NOT NULL,
+  issue_description TEXT NOT NULL,
+  date_submitted DATE NOT NULL,
+  status ENUM('Open', 'Resolved') NOT NULL,
+
+  CONSTRAINT fk_mr_student FOREIGN KEY (student_id) REFERENCES student(student_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+  CONSTRAINT fk_mr_room FOREIGN KEY (room_id) REFERENCES room(room_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE ra (
+  ra_id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  assigned_dorm INT,
+
+  CONSTRAINT fk_ra_dorm FOREIGN KEY (assigned_dorm) REFERENCES dorm(dorm_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE room_inspection (
+  inspection_id INT PRIMARY KEY AUTO_INCREMENT,
+  ra_id INT NOT NULL,
+  room_id INT NOT NULL,
+  inspection_date DATE NOT NULL,
+  notes TEXT,
+  result ENUM('Pass', 'Fail') NOT NULL,
+
+  CONSTRAINT fk_inspection_ra FOREIGN KEY (ra_id) REFERENCES ra(ra_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+  CONSTRAINT fk_inspection_room FOREIGN KEY (room_id) REFERENCES room(room_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE room_preference (
+  student_id INT PRIMARY KEY,
+  preferred_floor INT,
+  preferred_roomate_id INT,
+
+  CONSTRAINT fk_pref_student FOREIGN KEY (student_id) REFERENCES student(student_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+  CONSTRAINT fk_pref_roommate FOREIGN KEY (preferred_roomate_id) REFERENCES student(student_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+);
+
+
+CREATE TABLE dorm_event (
+  event_id INT PRIMARY KEY AUTO_INCREMENT,
+  dorm_id INT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  description TEXT NOT NULL,
+  date DATE NOT NULL,
+
+  CONSTRAINT fk_event_dorm FOREIGN KEY (dorm_id) REFERENCES dorm(dorm_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE room_change_history (
+  change_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  old_room_id INT,
+  new_room_id INT,
+  change_date DATE NOT NULL,
+
+  CONSTRAINT fk_change_student FOREIGN KEY (student_id) REFERENCES student(student_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+  CONSTRAINT fk_old_room FOREIGN KEY (old_room_id) REFERENCES room(room_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+
+  CONSTRAINT fk_new_room FOREIGN KEY (new_room_id) REFERENCES room(room_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) AUTO_INCREMENT = 1;
+
+
+CREATE TABLE maintenance_request_log (
+  log_id INT PRIMARY KEY AUTO_INCREMENT,
+  request_id INT,
+  resolved_by VARCHAR(100),
+  resolution_date DATE
+);
+
+
+CREATE TABLE ra_notifications (
+  notification_id INT AUTO_INCREMENT PRIMARY KEY,
+  ra_name VARCHAR(100),
+  message TEXT,
+  notify_date DATETIME
+);
+
+
+-- VIEWS
+-- current students in each dorm/floor with RA names
+CREATE VIEW current_students_by_floor AS
+SELECT
+    s.name AS student_name,
+    r.floor,
+    d.name AS dorm_name,
+    ra.name AS ra_name
+FROM student s
+JOIN room_assignment ra_assign ON s.student_id = ra_assign.student_id
+JOIN room r ON ra_assign.room_id = r.room_id
+JOIN dorm d ON r.dorm_id = d.dorm_id
+JOIN ra ON ra.assigned_dorm = d.dorm_id
+WHERE ra_assign.date_vacated IS NULL;
+
+
+-- unresolved maintenance requests sorted by urgency
+CREATE VIEW open_maintenance_requests AS
+SELECT
+    mr.request_id,
+    s.name AS student_name,
+    mr.issue_description,
+    mr.status,
+    mr.date_submitted
+FROM maintenance_request mr
+JOIN student s ON mr.student_id = s.student_id
+WHERE mr.status <> 'Resolved'
+ORDER BY
+    FIELD(mr.status, 'Urgent', 'Open'),
+    mr.date_submitted;
+
+
+-- students with more than one room change
+CREATE VIEW frequent_room_changers AS
+SELECT
+    s.student_id,
+    s.name,
+    COUNT(rch.change_id) AS num_changes
+FROM student s
+JOIN room_change_history rch ON s.student_id = rch.student_id
+GROUP BY s.student_id
+HAVING COUNT(rch.change_id) > 1;
+
+
+-- PROCEDURES
+-- assign student to a room based on availability and preference
+DELIMITER $$
+CREATE PROCEDURE assign_student_to_room(IN sid INT)
+BEGIN
+  DECLARE pref_floor INT;
+  DECLARE found_room INT;
+
+  SELECT preferred_floor INTO pref_floor
+  FROM room_preference WHERE student_id = sid;
+
+  SELECT room_id INTO found_room
+  FROM room
+  WHERE current_occupancy < capacity
+    AND (pref_floor IS NULL OR floor = pref_floor)
+  ORDER BY floor
+  LIMIT 1;
+
+  IF found_room IS NOT NULL THEN
+    INSERT INTO room_assignment (student_id, room_id, date_assigned)
+    VALUES (sid, found_room, CURDATE());
+
+    UPDATE room SET current_occupancy = current_occupancy + 1
+    WHERE room_id = found_room;
+  END IF;
+END$$
+DELIMITER ;
+
+
+-- close maintenance request and log who resolved it
+DELIMITER $$
+CREATE PROCEDURE close_maintenance_request(IN req_id INT, IN resolver_name VARCHAR(100))
+BEGIN
+  UPDATE maintenance_request
+  SET status = 'Resolved'
+  WHERE request_id = req_id;
+
+  INSERT INTO maintenance_request_log (request_id, resolved_by, resolution_date)
+  VALUES (req_id, resolver_name, CURDATE());
+END$$
+DELIMITER ;
+
+
+-- generate dorm occupancy summary
+DELIMITER $$
+CREATE PROCEDURE dorm_occupancy_report()
+BEGIN
+  SELECT
+    d.dorm_id,
+    d.name AS dorm_name,
+    COUNT(r.room_id) AS total_rooms,
+    SUM(r.capacity) AS total_capacity,
+    SUM(r.current_occupancy) AS total_occupied,
+    ROUND(SUM(r.current_occupancy) / SUM(r.capacity) * 100, 2) AS occupancy_rate
+  FROM dorm d
+  JOIN room r ON d.dorm_id = r.dorm_id
+  GROUP BY d.dorm_id, d.name;
+END$$
+DELIMITER ;
+
+
+-- TRIGGERS
+-- log to RoomChangeHistory when RoomAssignments are updated
+DELIMITER $$
+CREATE TRIGGER log_room_change
+AFTER UPDATE ON room_assignment
+FOR EACH ROW
+BEGIN
+  IF OLD.room_id <> NEW.room_id THEN
+    INSERT INTO room_change_history (student_id, old_room_id, new_room_id, change_date)
+    VALUES (NEW.student_id, OLD.room_id, NEW.room_id, CURDATE());
+  END IF;
+END$$
+DELIMITER ;
+
+
+-- mock email RA on new MaintenanceRequest
+DELIMITER $$
+CREATE TRIGGER notify_ra_new_request
+AFTER INSERT ON maintenance_request
+FOR EACH ROW
+BEGIN
+  DECLARE dorm_id INT;
+  DECLARE ra_name VARCHAR(100);
+
+  SELECT r.dorm_id INTO dorm_id FROM room r WHERE r.room_id = NEW.room_id;
+  SELECT ra.name INTO ra_name FROM ra WHERE ra.assigned_dorm = dorm_id LIMIT 1;
+
+  -- Mocking with INSERT into log table
+  INSERT INTO ra_notifications (ra_name, message, notify_date)
+  VALUES (
+    ra_name,
+    CONCAT('New maintenance request submitted for dorm ', dorm_id),
+    NOW()
+  );
+END$$
+DELIMITER ;
+
+
+-- before insert on RoomAssignment: check capacity
+DELIMITER $$
+CREATE TRIGGER check_room_capacity
+BEFORE INSERT ON room_assignment
+FOR EACH ROW
+BEGIN
+  DECLARE cap INT;
+  DECLARE occ INT;
+
+  SELECT capacity, current_occupancy INTO cap, occ
+  FROM room WHERE room_id = NEW.room_id;
+
+  IF occ >= cap THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Room is already full!';
+  END IF;
+END$$
+DELIMITER ;
+
+
+--
+-- -----------------------------------------------------------------------------------------------------------------------------
+-- TEST INSERTS
+
+
+-- STUDENTS
+INSERT INTO student (student_id, name, gender, year, email) VALUES (1, 'Alice Johnson', 'F', 2, 'alice.johnson@univ.edu');
+INSERT INTO student (student_id, name, gender, year, email) VALUES (2, 'Bob Smith', 'M', 1, 'bob.smith@univ.edu');
+INSERT INTO student (student_id, name, gender, year, email) VALUES (3, 'Charlie Nguyen', 'M', 3, 'charlie.nguyen@univ.edu');
+INSERT INTO student (student_id, name, gender, year, email) VALUES (4, 'Dana Lopez', 'F', 4, 'dana.lopez@univ.edu');
+
+-- DORMS
+INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (1, 'Hawthorne Hall', 'North Campus', 5);
+INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (2, 'Maple Hall', 'South Campus', 4);
+
+-- ROOMS
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (1, 1, 1, 2, 1);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (2, 1, 2, 2, 2);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (3, 2, 1, 2, 1);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (4, 2, 2, 1, 0);
+
+-- ROOM ASSIGNMENTS
+INSERT INTO room_assignment (assignment_id, student_id, room_id, date_assigned, date_vacated) VALUES (1, 1, 1, '2025-01-15', NULL);
+INSERT INTO room_assignment (assignment_id, student_id, room_id, date_assigned, date_vacated) VALUES (2, 2, 3, '2025-02-01', NULL);
+INSERT INTO room_assignment (assignment_id, student_id, room_id, date_assigned, date_vacated) VALUES (3, 3, 4, '2025-01-10', NULL);
+
+-- MAINTENANCE REQUESTS
+INSERT INTO maintenance_request (request_id, student_id, room_id, issue_description, date_submitted, status) VALUES (1, 1, 1, 'Leaky faucet', '2025-04-10', 'Open');
+INSERT INTO maintenance_request (request_id, student_id, room_id, issue_description, date_submitted, status) VALUES (2, 2, 2, 'Heater not working', '2025-04-12', 'Resolved');
+INSERT INTO maintenance_request (request_id, student_id, room_id, issue_description, date_submitted, status) VALUES (3, 3, 3, 'Broken window', '2025-04-15', 'Open');
+
+-- RAs
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (1, 'Emily Carter', '555-1234', 1);
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (2, 'James Lee', '555-5678', 2);
+
+-- ROOM INSPECTIONS
+INSERT INTO room_inspection (inspection_id, ra_id, room_id, inspection_date, notes, result) VALUES (1, 1, 1, '2025-04-01', 'Clean and in good condition', 'Pass');
+INSERT INTO room_inspection (inspection_id, ra_id, room_id, inspection_date, notes, result) VALUES (2, 2, 3, '2025-04-03', 'Window broken', 'Fail');
+
+-- ROOM PREFERENCES
+INSERT INTO room_preference (student_id, preferred_floor, preferred_roomate_id) VALUES (1, 1, 2);
+INSERT INTO room_preference (student_id, preferred_floor, preferred_roomate_id) VALUES (2, 2, NULL);
+INSERT INTO room_preference (student_id, preferred_floor, preferred_roomate_id) VALUES (3, NULL, NULL);
+
+-- DORM EVENTS
+INSERT INTO dorm_event (event_id, dorm_id, title, description, date) VALUES (1, 1, 'Game Night', 'Board games and pizza in the lounge', '2025-04-20');
+INSERT INTO dorm_event (event_id, dorm_id, title, description, date) VALUES (2, 2, 'Study Session', 'Quiet hours study with snacks', '2025-04-21');
+
+-- ROOM CHANGE HISTORY
+INSERT INTO room_change_history (change_id, student_id, old_room_id, new_room_id, change_date) VALUES (1, 1, 1, 2, '2025-03-01');
+INSERT INTO room_change_history (change_id, student_id, old_room_id, new_room_id, change_date) VALUES (2, 2, 2, 3, '2025-03-15');
+INSERT INTO room_change_history (change_id, student_id, old_room_id, new_room_id, change_date) VALUES (3, 2, 3, 2, '2025-04-01');
+
+-- MAINTENANCE REQUEST LOG
+INSERT INTO maintenance_request_log (log_id, request_id, resolved_by, resolution_date) VALUES (1, 2, 'RA James Lee', '2025-04-13');
+
+-- DELETE RA NOTIFICATIONS
+-- DELETE FROM ra_notifications WHERE notification_id = 1;
+-- DELETE FROM ra_notifications WHERE notification_id = 2;
+-- DELETE FROM ra_notifications WHERE notification_id = 3;
+-- DELETE FROM ra_notifications WHERE notification_id = 4;
+-- DELETE FROM ra_notifications WHERE notification_id = 5;
+-- DELETE FROM ra_notifications WHERE notification_id = 6;
+
+-- RA NOTIFICATIONS
+INSERT INTO ra_notifications (notification_id, ra_name, message, notify_date) VALUES (4, 'Emily Carter', 'New maintenance request submitted for dorm 3', '2025-04-10 10:00:00');
+INSERT INTO ra_notifications (notification_id, ra_name, message, notify_date) VALUES (5, 'James Lee', 'New maintenance request submitted for dorm 2', '2025-04-15 14:30:00');
