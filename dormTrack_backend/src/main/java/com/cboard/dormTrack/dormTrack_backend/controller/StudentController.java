@@ -3,14 +3,13 @@ package com.cboard.dormTrack.dormTrack_backend.controller;
 import com.cboard.dormTrack.dormTrack_backend.model.Student;
 import com.cboard.dormTrack.dormTrack_backend.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/students")
-@CrossOrigin(origins = "http://localhost:8081")
+@CrossOrigin(origins = "http://localhost:8080") // adjust for frontend port if needed
 public class StudentController {
 
     @Autowired
@@ -26,15 +25,18 @@ public class StudentController {
         return studentRepo.save(student);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Student> updateStudent(@PathVariable int id, @RequestBody Student student) {
-        student.setStudent_id(id);
-        return ResponseEntity.ok(studentRepo.save(student));
+    @DeleteMapping("/{id}")
+    public void deleteStudent(@PathVariable int id) {
+        studentRepo.deleteById(id);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable int id) {
-        studentRepo.deleteById(id);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/{id}")
+    public Student updateStudent(@PathVariable int id, @RequestBody Student studentDetails) {
+        Student student = studentRepo.findById(id).orElseThrow();
+        student.setName(studentDetails.getName());
+        student.setGender(studentDetails.getGender());
+        student.setYear(studentDetails.getYear());
+        student.setEmail(studentDetails.getEmail());
+        return studentRepo.save(student);
     }
 }
