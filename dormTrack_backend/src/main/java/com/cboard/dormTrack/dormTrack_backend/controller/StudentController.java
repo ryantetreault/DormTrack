@@ -9,18 +9,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/students")
-@CrossOrigin(origins = "http://localhost:8080") // adjust for frontend port if needed
+@CrossOrigin(origins = "http://localhost:8080")
 public class StudentController {
 
     @Autowired
     private StudentRepository studentRepo;
 
-    @GetMapping
+    @GetMapping("all")
     public List<Student> getAllStudents() {
         return studentRepo.findAll();
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public Student createStudent(@RequestBody Student student) {
         return studentRepo.save(student);
     }

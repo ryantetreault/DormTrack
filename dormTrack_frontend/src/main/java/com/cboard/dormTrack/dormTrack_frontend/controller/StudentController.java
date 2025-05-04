@@ -1,7 +1,9 @@
 package com.cboard.dormTrack.dormTrack_frontend.controller;
 
 import com.cboard.dormTrack.dormTrack_frontend.model.AddStudentDialog;
-import com.cboard.dormTrack.dormTrack_frontend.model.Student;
+import com.cboard.dormTrack.dormTrack_common.dto.StudentDTO;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -19,29 +21,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class StudentController {
 
-    @FXML private TableView<Student> studentTable;
-    @FXML private TableColumn<Student, Integer> idCol;
-    @FXML private TableColumn<Student, String> nameCol;
-    @FXML private TableColumn<Student, String> genderCol;
-    @FXML private TableColumn<Student, Integer> yearCol;
-    @FXML private TableColumn<Student, String> emailCol;
-    @FXML private TableColumn<Student, Void> actionCol;
+    @FXML private TableView<StudentDTO> studentTable;
+    @FXML private TableColumn<StudentDTO, Integer> idCol;
+    @FXML private TableColumn<StudentDTO, String> nameCol;
+    @FXML private TableColumn<StudentDTO, String> genderCol;
+    @FXML private TableColumn<StudentDTO, Integer> yearCol;
+    @FXML private TableColumn<StudentDTO, String> emailCol;
+    @FXML private TableColumn<StudentDTO, Void> actionCol;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @FXML
     public void initialize() {
-        idCol.setCellValueFactory(data -> data.getValue().studentIdProperty().asObject());
-        nameCol.setCellValueFactory(data -> data.getValue().nameProperty());
-        genderCol.setCellValueFactory(data -> data.getValue().genderProperty());
-        yearCol.setCellValueFactory(data -> data.getValue().yearProperty().asObject());
-        emailCol.setCellValueFactory(data -> data.getValue().emailProperty());
+        idCol.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getStudentId()));
+        nameCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getName()));
+        genderCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getGender()));
+        yearCol.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getYear()));
+        emailCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getEmail()));
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button editBtn = new Button("Edit");
 
             {
                 editBtn.setOnAction(e -> {
-                    Student student = getTableView().getItems().get(getIndex());
+                    StudentDTO student = getTableView().getItems().get(getIndex());
                     showEditDialog(student);
                 });
             }
@@ -56,21 +58,23 @@ public class StudentController {
                 }
             }
         });
+
+        handleLoadStudents();
     }
 
     @FXML
     private void handleLoadStudents() {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8080/students"))
+                .uri(URI.create("http://localhost:8080/students/all"))
                 .build();
 
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body)
                 .thenAccept(response -> {
                     try {
-                        List<Student> students = mapper.readValue(response, new TypeReference<>() {});
-                        ObservableList<Student> data = FXCollections.observableArrayList(students);
+                        List<StudentDTO> students = mapper.readValue(response, new TypeReference<>() {});
+                        ObservableList<StudentDTO> data = FXCollections.observableArrayList(students);
                         studentTable.setItems(data);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -81,13 +85,13 @@ public class StudentController {
     @FXML
     private void handleAddStudent() {
         AddStudentDialog addDialog = new AddStudentDialog();
-        Dialog<Student> dialog = addDialog.getDialog();
+        Dialog<StudentDTO> dialog = addDialog.getDialog();
 
         dialog.showAndWait().ifPresent(student -> {
             try {
                 String json = mapper.writeValueAsString(student);
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/students"))
+                        .uri(URI.create("http://localhost:8080/students/add"))
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(json))
                         .build();
@@ -116,8 +120,8 @@ public class StudentController {
         }
     }
 
-    private void showEditDialog(Student student) {
-        Dialog<Student> dialog = new Dialog<>();
+    private void showEditDialog(StudentDTO student) {
+        Dialog<StudentDTO> dialog = new Dialog<>();
         dialog.setTitle("Edit Student");
 
         ButtonType saveBtnType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
@@ -157,7 +161,7 @@ public class StudentController {
         });
     }
 
-    private void updateStudent(Student student) {
+    private void updateStudent(StudentDTO student) {
         try {
             String json = mapper.writeValueAsString(student);
             HttpRequest request = HttpRequest.newBuilder()

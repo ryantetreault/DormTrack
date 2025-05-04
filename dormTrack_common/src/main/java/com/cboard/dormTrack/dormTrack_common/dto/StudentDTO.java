@@ -1,5 +1,7 @@
 package com.cboard.dormTrack.dormTrack_common.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class StudentDTO {
     public int getStudentId() {
         return studentId;
@@ -41,6 +43,7 @@ public class StudentDTO {
         this.email = email;
     }
 
+    @JsonProperty("student_id")
     private int studentId;
     private String name;
     private String gender;
