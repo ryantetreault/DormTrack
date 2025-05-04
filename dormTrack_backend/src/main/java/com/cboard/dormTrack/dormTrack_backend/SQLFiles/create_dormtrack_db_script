@@ -332,10 +332,10 @@ DELIMITER ;
 
 
 -- STUDENTS
-INSERT INTO student (student_id, name, gender, year, email) VALUES (1, 'Alice Johnson', 'F', 2, 'alice.johnson@univ.edu');
-INSERT INTO student (student_id, name, gender, year, email) VALUES (2, 'Bob Smith', 'M', 1, 'bob.smith@univ.edu');
-INSERT INTO student (student_id, name, gender, year, email) VALUES (3, 'Charlie Nguyen', 'M', 3, 'charlie.nguyen@univ.edu');
-INSERT INTO student (student_id, name, gender, year, email) VALUES (4, 'Dana Lopez', 'F', 4, 'dana.lopez@univ.edu');
+INSERT INTO student (student_id, name, gender, year, email) VALUES (1, 'Alice Johnson', 'F', 2, 'alice.johnson@westfield.ma.edu');
+INSERT INTO student (student_id, name, gender, year, email) VALUES (2, 'Bob Smith', 'M', 1, 'bob.smith@westfield.ma.edu');
+INSERT INTO student (student_id, name, gender, year, email) VALUES (3, 'Charlie Nguyen', 'M', 3, 'charlie.nguyen@westfield.ma.edu');
+INSERT INTO student (student_id, name, gender, year, email) VALUES (4, 'Dana Lopez', 'F', 4, 'dana.lopez@westfield.ma.edu');
 
 -- DORMS
 INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (1, 'Hawthorne Hall', 'North Campus', 5);

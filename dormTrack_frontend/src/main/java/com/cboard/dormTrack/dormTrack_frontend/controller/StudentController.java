@@ -2,6 +2,7 @@ package com.cboard.dormTrack.dormTrack_frontend.controller;
 
 import com.cboard.dormTrack.dormTrack_frontend.model.AddStudentDialog;
 import com.cboard.dormTrack.dormTrack_common.dto.StudentDTO;
+import com.cboard.dormTrack.dormTrack_frontend.model.EditStudentDialog;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -121,43 +122,15 @@ public class StudentController {
     }
 
     private void showEditDialog(StudentDTO student) {
-        Dialog<StudentDTO> dialog = new Dialog<>();
-        dialog.setTitle("Edit Student");
+        EditStudentDialog editDialog = new EditStudentDialog();
+        Dialog<StudentDTO> dialog = editDialog.getDialog(student);
 
-        ButtonType saveBtnType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        ButtonType deleteBtnType = new ButtonType("Delete", ButtonBar.ButtonData.LEFT);
-        dialog.getDialogPane().getButtonTypes().addAll(saveBtnType, deleteBtnType, ButtonType.CANCEL);
-
-        TextField nameField = new TextField(student.getName());
-        TextField genderField = new TextField(student.getGender());
-        TextField yearField = new TextField(String.valueOf(student.getYear()));
-        TextField emailField = new TextField(student.getEmail());
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10);
-        grid.addRow(0, new Label("Name:"), nameField);
-        grid.addRow(1, new Label("Gender:"), genderField);
-        grid.addRow(2, new Label("Year:"), yearField);
-        grid.addRow(3, new Label("Email:"), emailField);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(button -> {
-            if (button == saveBtnType) {
-                student.setName(nameField.getText());
-                student.setGender(genderField.getText());
-                student.setYear(Integer.parseInt(yearField.getText()));
-                student.setEmail(emailField.getText());
-                return student;
-            } else if (button == deleteBtnType) {
+        dialog.showAndWait().ifPresent(result -> {
+            if (result.getName() == null) { // deleted
                 deleteStudent(student.getStudentId());
-                return null;
+            } else {
+                updateStudent(result);
             }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(updatedStudent -> {
-            updateStudent(updatedStudent);
         });
     }
 
