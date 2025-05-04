@@ -23,7 +23,6 @@
     </TableView>
 
     <HBox spacing="10">
-        <Button text="Load Students" onAction="#handleLoadStudents"/>
         <Button text="Add Student" onAction="#handleAddStudent"/>
         <Button text="Back to Dashboard" onAction="#handleBack"/>
     </HBox>

@@ -13,5 +13,4 @@ public class DormTrackBackendApplication
 		SpringApplication.run(DormTrackBackendApplication.class, args);
 
 	}
-
 }

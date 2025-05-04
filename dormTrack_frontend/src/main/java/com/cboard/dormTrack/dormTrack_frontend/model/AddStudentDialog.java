@@ -1,12 +1,15 @@
 package com.cboard.dormTrack.dormTrack_frontend.model;
 
+import com.cboard.dormTrack.dormTrack_common.dto.StudentDTO;
+import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 
 public class AddStudentDialog {
 
-    public Dialog<Student> getDialog() {
-        Dialog<Student> dialog = new Dialog<>();
+    public Dialog<StudentDTO> getDialog() {
+        Dialog<StudentDTO> dialog = new Dialog<>();
         dialog.setTitle("Add New Student");
 
         ButtonType addButtonType = new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);
@@ -16,9 +19,13 @@ public class AddStudentDialog {
         TextField genderField = new TextField();
         TextField yearField = new TextField();
         TextField emailField = new TextField();
+        Label errorLabel = new Label();
+        errorLabel.setStyle("-fx-text-fill: red;");
+        errorLabel.setVisible(false);
 
         GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10);
+        grid.setHgap(10);
+        grid.setVgap(10);
 
         grid.add(new Label("Name:"), 0, 0);
         grid.add(nameField, 1, 0);
@@ -28,12 +35,26 @@ public class AddStudentDialog {
         grid.add(yearField, 1, 2);
         grid.add(new Label("Email:"), 0, 3);
         grid.add(emailField, 1, 3);
+        grid.add(errorLabel, 1, 4); // Add error label to grid
 
         dialog.getDialogPane().setContent(grid);
 
+        // block dialog from closing if email is invalid
+        Node addButton = dialog.getDialogPane().lookupButton(addButtonType);
+        addButton.addEventFilter(ActionEvent.ACTION, event -> {
+            String email = emailField.getText();
+            if (!email.endsWith("@westfield.ma.edu")) {
+                errorLabel.setText("Email must end with @westfield.ma.edu");
+                errorLabel.setVisible(true);
+                event.consume(); // Prevent dialog from closing
+            } else {
+                errorLabel.setVisible(false); // Clear any previous errors
+            }
+        });
+
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == addButtonType) {
-                Student student = new Student();
+                StudentDTO student = new StudentDTO();
                 student.setName(nameField.getText());
                 student.setGender(genderField.getText());
                 student.setYear(Integer.parseInt(yearField.getText()));
