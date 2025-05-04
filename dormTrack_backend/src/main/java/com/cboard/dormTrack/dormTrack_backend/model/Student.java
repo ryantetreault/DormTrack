@@ -15,9 +15,8 @@ public class Student {
     private int year;
     private String email;
 
-    // Getters and Setters
-    public int getStudent_id() { return student_id; }
-    public void setStudent_id(int student_id) { this.student_id = student_id; }
+    public int getStudentId() { return student_id; }
+    public void setStudentId(int student_id) { this.student_id = student_id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

@@ -97,6 +97,12 @@
 			<version>2.18.3</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>2.18.3</version> <!-- Match this to your Jackson version (or use latest) -->
+		</dependency>
+
 
 	</dependencies>
 

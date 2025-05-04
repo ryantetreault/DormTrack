@@ -6,6 +6,8 @@ module com.cboard.dormTrack.dormTrack_frontend {
     requires javafx.graphics;
     requires java.net.http;
     requires com.fasterxml.jackson.databind;
+    requires java.sql;
+    requires com.fasterxml.jackson.datatype.jsr310;
 
     opens com.cboard.dormTrack.dormTrack_frontend to javafx.fxml;
     opens com.cboard.dormTrack.dormTrack_frontend.controller to javafx.fxml;

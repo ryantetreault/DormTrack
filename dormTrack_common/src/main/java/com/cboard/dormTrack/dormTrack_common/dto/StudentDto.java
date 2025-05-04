@@ -1,8 +1,10 @@
 package com.cboard.dormTrack.dormTrack_common.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
-public class StudentDTO {
+@Data
+public class StudentDto {
     public int getStudentId() {
         return studentId;
     }

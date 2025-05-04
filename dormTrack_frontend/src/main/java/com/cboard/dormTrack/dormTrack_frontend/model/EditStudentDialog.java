@@ -1,6 +1,6 @@
 package com.cboard.dormTrack.dormTrack_frontend.model;
 
-import com.cboard.dormTrack.dormTrack_common.dto.StudentDTO;
+import com.cboard.dormTrack.dormTrack_common.dto.StudentDto;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -8,8 +8,8 @@ import javafx.scene.layout.GridPane;
 
 public class EditStudentDialog {
 
-    public Dialog<StudentDTO> getDialog(StudentDTO student) {
-        Dialog<StudentDTO> dialog = new Dialog<>();
+    public Dialog<StudentDto> getDialog(StudentDto student) {
+        Dialog<StudentDto> dialog = new Dialog<>();
         dialog.setTitle("Edit Student");
 
         ButtonType saveBtnType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);

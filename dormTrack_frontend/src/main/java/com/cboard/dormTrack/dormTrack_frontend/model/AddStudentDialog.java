@@ -1,6 +1,6 @@
 package com.cboard.dormTrack.dormTrack_frontend.model;
 
-import com.cboard.dormTrack.dormTrack_common.dto.StudentDTO;
+import com.cboard.dormTrack.dormTrack_common.dto.StudentDto;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -8,8 +8,8 @@ import javafx.scene.layout.GridPane;
 
 public class AddStudentDialog {
 
-    public Dialog<StudentDTO> getDialog() {
-        Dialog<StudentDTO> dialog = new Dialog<>();
+    public Dialog<StudentDto> getDialog() {
+        Dialog<StudentDto> dialog = new Dialog<>();
         dialog.setTitle("Add New Student");
 
         ButtonType addButtonType = new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);
@@ -54,7 +54,7 @@ public class AddStudentDialog {
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == addButtonType) {
-                StudentDTO student = new StudentDTO();
+                StudentDto student = new StudentDto();
                 student.setName(nameField.getText());
                 student.setGender(genderField.getText());
                 student.setYear(Integer.parseInt(yearField.getText()));

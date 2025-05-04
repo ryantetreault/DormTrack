@@ -2,6 +2,7 @@ package com.cboard.dormTrack.dormTrack_backend.controller;
 
 import com.cboard.dormTrack.dormTrack_backend.model.Student;
 import com.cboard.dormTrack.dormTrack_backend.repository.StudentRepository;
+import com.cboard.dormTrack.dormTrack_common.dto.StudentDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +16,20 @@ public class StudentController {
     @Autowired
     private StudentRepository studentRepo;
 
-    @GetMapping("all")
-    public List<Student> getAllStudents() {
-        return studentRepo.findAll();
+    @GetMapping("/all")
+    public List<StudentDto> getAllStudents() {
+        return studentRepo.findAll()
+                .stream()
+                .map(student -> {
+                    StudentDto dto = new StudentDto();
+                    dto.setStudentId(student.getStudentId());
+                    dto.setName(student.getName());
+                    dto.setGender(student.getGender());
+                    dto.setYear(student.getYear());
+                    dto.setEmail(student.getEmail());
+                    return dto;
+                })
+                .toList();
     }
 
     @PostMapping("/add")

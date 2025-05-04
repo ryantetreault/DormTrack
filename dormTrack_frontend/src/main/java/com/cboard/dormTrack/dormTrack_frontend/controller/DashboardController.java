@@ -17,7 +17,7 @@ public class DashboardController {
 
     @FXML
     private void handleAssignments(ActionEvent event) {
-        switchScene(event, "view/assignment_view.fxml");
+        switchScene(event, "/com/cboard/dormTrack/dormTrack_frontend/assignment_view.fxml");
     }
 
     @FXML

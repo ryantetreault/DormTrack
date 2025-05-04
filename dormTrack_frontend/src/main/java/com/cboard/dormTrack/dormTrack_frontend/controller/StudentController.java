@@ -1,7 +1,7 @@
 package com.cboard.dormTrack.dormTrack_frontend.controller;
 
 import com.cboard.dormTrack.dormTrack_frontend.model.AddStudentDialog;
-import com.cboard.dormTrack.dormTrack_common.dto.StudentDTO;
+import com.cboard.dormTrack.dormTrack_common.dto.StudentDto;
 import com.cboard.dormTrack.dormTrack_frontend.model.EditStudentDialog;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -12,7 +12,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import java.net.http.*;
 import java.net.URI;
@@ -22,13 +21,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class StudentController {
 
-    @FXML private TableView<StudentDTO> studentTable;
-    @FXML private TableColumn<StudentDTO, Integer> idCol;
-    @FXML private TableColumn<StudentDTO, String> nameCol;
-    @FXML private TableColumn<StudentDTO, String> genderCol;
-    @FXML private TableColumn<StudentDTO, Integer> yearCol;
-    @FXML private TableColumn<StudentDTO, String> emailCol;
-    @FXML private TableColumn<StudentDTO, Void> actionCol;
+    @FXML private TableView<StudentDto> studentTable;
+    @FXML private TableColumn<StudentDto, Integer> idCol;
+    @FXML private TableColumn<StudentDto, String> nameCol;
+    @FXML private TableColumn<StudentDto, String> genderCol;
+    @FXML private TableColumn<StudentDto, Integer> yearCol;
+    @FXML private TableColumn<StudentDto, String> emailCol;
+    @FXML private TableColumn<StudentDto, Void> actionCol;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -44,7 +43,7 @@ public class StudentController {
 
             {
                 editBtn.setOnAction(e -> {
-                    StudentDTO student = getTableView().getItems().get(getIndex());
+                    StudentDto student = getTableView().getItems().get(getIndex());
                     showEditDialog(student);
                 });
             }
@@ -74,8 +73,8 @@ public class StudentController {
                 .thenApply(HttpResponse::body)
                 .thenAccept(response -> {
                     try {
-                        List<StudentDTO> students = mapper.readValue(response, new TypeReference<>() {});
-                        ObservableList<StudentDTO> data = FXCollections.observableArrayList(students);
+                        List<StudentDto> students = mapper.readValue(response, new TypeReference<>() {});
+                        ObservableList<StudentDto> data = FXCollections.observableArrayList(students);
                         studentTable.setItems(data);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -86,7 +85,7 @@ public class StudentController {
     @FXML
     private void handleAddStudent() {
         AddStudentDialog addDialog = new AddStudentDialog();
-        Dialog<StudentDTO> dialog = addDialog.getDialog();
+        Dialog<StudentDto> dialog = addDialog.getDialog();
 
         dialog.showAndWait().ifPresent(student -> {
             try {
@@ -121,9 +120,9 @@ public class StudentController {
         }
     }
 
-    private void showEditDialog(StudentDTO student) {
+    private void showEditDialog(StudentDto student) {
         EditStudentDialog editDialog = new EditStudentDialog();
-        Dialog<StudentDTO> dialog = editDialog.getDialog(student);
+        Dialog<StudentDto> dialog = editDialog.getDialog(student);
 
         dialog.showAndWait().ifPresent(result -> {
             if (result.getName() == null) { // deleted
@@ -134,7 +133,7 @@ public class StudentController {
         });
     }
 
-    private void updateStudent(StudentDTO student) {
+    private void updateStudent(StudentDto student) {
         try {
             String json = mapper.writeValueAsString(student);
             HttpRequest request = HttpRequest.newBuilder()
