@@ -15,10 +15,10 @@
         <columns>
             <TableColumn fx:id="actionCol" text="Actions"/>
             <TableColumn fx:id="idCol" text="ID"/>
-            <TableColumn fx:id="nameCol" text="Name"/>
+            <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
             <TableColumn fx:id="genderCol" text="Gender"/>
             <TableColumn fx:id="yearCol" text="Year"/>
-            <TableColumn fx:id="emailCol" text="Email"/>
+            <TableColumn fx:id="emailCol" text="Email" prefWidth="250"/>
         </columns>
     </TableView>
 

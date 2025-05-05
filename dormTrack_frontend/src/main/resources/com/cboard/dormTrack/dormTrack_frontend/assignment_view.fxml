@@ -39,6 +39,7 @@
         <DatePicker fx:id="dateAssignedPicker" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
         <Button text="Assign Room" onAction="#onAssignRoom" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Button text="Back to Dashboard" onAction="#handleBackToDashboard" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
     </GridPane>
 
     <Separator/>

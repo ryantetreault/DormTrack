@@ -21,6 +21,11 @@ public class DashboardController {
     }
 
     @FXML
+    private void handleStudentsByFloor(ActionEvent event) {
+        switchScene(event, "/com/cboard/dormTrack/dormTrack_frontend/students_by_floor.fxml");
+    }
+
+    @FXML
     private void handleMaintenance(ActionEvent event) {
         switchScene(event, "view/maintenance_view.fxml");
     }

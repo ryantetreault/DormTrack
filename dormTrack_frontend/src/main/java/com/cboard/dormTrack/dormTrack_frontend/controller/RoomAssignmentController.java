@@ -10,11 +10,16 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -150,5 +155,17 @@ public class RoomAssignmentController {
     private void showAlert(Alert.AlertType type, String msg) {
         Alert alert = new Alert(type, msg, ButtonType.OK);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void handleBackToDashboard() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/cboard/dormTrack/dormTrack_frontend/dashboard.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) assignmentTable.getScene().getWindow(); // <- FIXED LINE
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
