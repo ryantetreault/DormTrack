@@ -449,6 +449,51 @@ INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (
 INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (17, 5, 2, 2, 1);
 INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (18, 5, 4, 1, 0);
 
+-- Additional rooms for Hawthorne Hall (Dorm 1)
+INSERT INTO room (dorm_id, floor, capacity, current_occupancy) VALUES
+(1, 5, 2, 0),
+(1, 5, 1, 0),
+(1, 4, 1, 1),
+(1, 3, 2, 0),
+(1, 2, 1, 1),
+(1, 1, 2, 1);
+
+-- Additional rooms for Maple Hall (Dorm 2)
+INSERT INTO room (dorm_id, floor, capacity, current_occupancy) VALUES
+(2, 4, 1, 0),
+(2, 3, 2, 1),
+(2, 2, 2, 0),
+(2, 2, 1, 1),
+(2, 1, 1, 0),
+(2, 1, 2, 0);
+
+-- Additional rooms for Oak Hall (Dorm 3)
+INSERT INTO room (dorm_id, floor, capacity, current_occupancy) VALUES
+(3, 6, 2, 0),
+(3, 6, 1, 1),
+(3, 5, 1, 1),
+(3, 4, 2, 0),
+(3, 3, 1, 0),
+(3, 2, 2, 2);
+
+-- Additional rooms for Birch Hall (Dorm 4)
+INSERT INTO room (dorm_id, floor, capacity, current_occupancy) VALUES
+(4, 3, 2, 0),
+(4, 3, 1, 1),
+(4, 2, 2, 1),
+(4, 2, 1, 0),
+(4, 1, 2, 1),
+(4, 1, 1, 1);
+
+-- Additional rooms for Cedar Hall (Dorm 5)
+INSERT INTO room (dorm_id, floor, capacity, current_occupancy) VALUES
+(5, 4, 1, 0),
+(5, 4, 2, 0),
+(5, 3, 2, 2),
+(5, 2, 1, 1),
+(5, 1, 1, 0),
+(5, 1, 2, 1);
+
 -- ------------------------------------------------------------------------------------------------------------------
 
 -- ROOM ASSIGNMENTS
