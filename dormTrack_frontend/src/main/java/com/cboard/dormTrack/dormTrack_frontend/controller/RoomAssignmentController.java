@@ -1,9 +1,6 @@
 package com.cboard.dormTrack.dormTrack_frontend.controller;
 
-import com.cboard.dormTrack.dormTrack_common.dto.AssignmentDto;
-import com.cboard.dormTrack.dormTrack_common.dto.AssignmentRequest;
-import com.cboard.dormTrack.dormTrack_common.dto.RoomDto;
-import com.cboard.dormTrack.dormTrack_common.dto.StudentDto;
+import com.cboard.dormTrack.dormTrack_common.dto.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -29,14 +26,24 @@ import java.util.List;
 
 public class RoomAssignmentController {
 
-    @FXML private ComboBox<StudentDto> studentComboBox;
-    @FXML private ComboBox<RoomDto> roomComboBox;
-    @FXML private DatePicker dateAssignedPicker;
-    @FXML private TableView<AssignmentDto> assignmentTable;
-    @FXML private TableColumn<AssignmentDto, String> colStudent;
-    @FXML private TableColumn<AssignmentDto, String> colRoom;
-    @FXML private TableColumn<AssignmentDto, String> colAssigned;
-    @FXML private TableColumn<AssignmentDto, String> colVacated;
+    @FXML
+    private ComboBox<StudentDto> studentComboBox;
+    @FXML
+    private ComboBox<DormDto> dormComboBox;
+    @FXML
+    private ComboBox<RoomDto> roomComboBox;
+    @FXML
+    private DatePicker dateAssignedPicker;
+    @FXML
+    private TableView<AssignmentDto> assignmentTable;
+    @FXML
+    private TableColumn<AssignmentDto, String> colStudent;
+    @FXML
+    private TableColumn<AssignmentDto, String> colRoom;
+    @FXML
+    private TableColumn<AssignmentDto, String> colAssigned;
+    @FXML
+    private TableColumn<AssignmentDto, String> colVacated;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -46,7 +53,16 @@ public class RoomAssignmentController {
     public void initialize() {
         loadStudents();
         loadRooms();
+        loadDorms();
         loadAssignments();
+
+        dormComboBox.setOnAction(event -> {
+            DormDto selected = dormComboBox.getValue();
+            if (selected != null) {
+                System.out.println("Dorm selected: " + selected.getName());
+                // TODO: loadRoomsByDormId(selected.getDormId());
+            }
+        });
     }
 
     private void loadStudents() {
@@ -167,5 +183,28 @@ public class RoomAssignmentController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void loadDorms() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/dorms/all"))
+                .GET().build();
+
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenAccept(json -> {
+                    try {
+                        List<DormDto> dorms = objectMapper.readValue(json, new TypeReference<>() {});
+                        Platform.runLater(() -> {
+                            dormComboBox.setItems(FXCollections.observableArrayList(dorms));
+                            dormComboBox.setConverter(new StringConverter<>() {
+                                public String toString(DormDto d) { return d.getName(); }
+                                public DormDto fromString(String s) { return null; }
+                            });
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
     }
 }

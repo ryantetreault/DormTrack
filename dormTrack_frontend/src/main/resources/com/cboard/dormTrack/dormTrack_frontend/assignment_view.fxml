@@ -32,14 +32,17 @@
         <Label text="Student:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <ComboBox fx:id="studentComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-        <Label text="Room:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="roomComboBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <Label text="Dorm:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="dormComboBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-        <Label text="Assign Date:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <DatePicker fx:id="dateAssignedPicker" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label text="Room:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="roomComboBox" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Button text="Assign Room" onAction="#onAssignRoom" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-        <Button text="Back to Dashboard" onAction="#handleBackToDashboard" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+        <Label text="Assign Date:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="dateAssignedPicker" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Button text="Assign Room" onAction="#onAssignRoom" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <Button text="Back to Dashboard" onAction="#handleBackToDashboard" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
     </GridPane>
 
     <Separator/>
@@ -52,5 +55,4 @@
             <TableColumn fx:id="colVacated" text="Date Vacated"/>
         </columns>
     </TableView>
-
 </VBox>

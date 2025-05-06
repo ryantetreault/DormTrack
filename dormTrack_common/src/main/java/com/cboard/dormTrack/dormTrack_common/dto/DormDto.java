@@ -8,6 +8,11 @@ public class DormDto {
 
     public DormDto() {}
 
+    public DormDto(int dormId, String name) {
+        this.dormId = dormId;
+        this.name = name;
+    }
+
     public DormDto(int dormId, String name, String location, int totalFloors) {
         this.dormId = dormId;
         this.name = name;
@@ -45,5 +50,10 @@ public class DormDto {
 
     public void setTotalFloors(int totalFloors) {
         this.totalFloors = totalFloors;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
