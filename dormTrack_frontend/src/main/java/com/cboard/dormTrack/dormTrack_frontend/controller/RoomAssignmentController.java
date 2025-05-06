@@ -52,7 +52,8 @@ public class RoomAssignmentController {
 
     public void initialize() {
         loadStudents();
-        loadRooms();
+        // initially clear roomComboBox
+        roomComboBox.setItems(FXCollections.observableArrayList());
         loadDorms();
         loadAssignments();
 
@@ -60,7 +61,7 @@ public class RoomAssignmentController {
             DormDto selected = dormComboBox.getValue();
             if (selected != null) {
                 System.out.println("Dorm selected: " + selected.getName());
-                // TODO: loadRoomsByDormId(selected.getDormId());
+                loadRoomsByDormId(selected.getDormId());
             }
         });
     }
@@ -200,6 +201,31 @@ public class RoomAssignmentController {
                             dormComboBox.setConverter(new StringConverter<>() {
                                 public String toString(DormDto d) { return d.getName(); }
                                 public DormDto fromString(String s) { return null; }
+                            });
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+    }
+
+    private void loadRoomsByDormId(int dormId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/dorms/available/by-dorm/" + dormId))
+                .GET().build();
+
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenAccept(json -> {
+                    try {
+                        List<RoomDto> rooms = objectMapper.readValue(json, new TypeReference<>() {});
+                        Platform.runLater(() -> {
+                            roomComboBox.setItems(FXCollections.observableArrayList(rooms));
+                            roomComboBox.setConverter(new StringConverter<>() {
+                                public String toString(RoomDto r) {
+                                    return "Room " + r.getRoomId() + " (Floor " + r.getFloor() + ")";
+                                }
+                                public RoomDto fromString(String s) { return null; }
                             });
                         });
                     } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.cboard.dormTrack.dormTrack_backend.controller;
 
+import com.cboard.dormTrack.dormTrack_backend.service.AssignmentService;
 import com.cboard.dormTrack.dormTrack_common.dto.AssignmentDto;
 import com.cboard.dormTrack.dormTrack_common.dto.AssignmentRequest;
 import com.cboard.dormTrack.dormTrack_backend.model.Assignment;
@@ -25,6 +26,13 @@ public class AssignmentController {
     @Autowired
     private RoomRepository roomRepo;
 
+    private final AssignmentService assignmentService;
+
+    @Autowired
+    public AssignmentController(AssignmentService assignmentService) {
+        this.assignmentService = assignmentService;
+    }
+
     @GetMapping("/all")
     public List<AssignmentDto> getAllAssignments() {
         return assignmentRepo.findAll().stream()
@@ -40,19 +48,6 @@ public class AssignmentController {
 
     @PostMapping
     public void assignRoom(@RequestBody AssignmentRequest request) {
-        var student = studentRepo.findById(request.getStudentId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid student ID"));
-        var room = roomRepo.findById(request.getRoomId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid room ID"));
-
-        if (room.getCurrentOccupancy() >= room.getCapacity()) {
-            throw new IllegalStateException("Room is full");
-        }
-
-        Assignment assignment = new Assignment(student, room, request.getDateAssigned());
-        assignmentRepo.save(assignment);
-
-        room.setCurrentOccupancy(room.getCurrentOccupancy() + 1);
-        roomRepo.save(room);
+        assignmentService.assignRoom(request);
     }
 }
