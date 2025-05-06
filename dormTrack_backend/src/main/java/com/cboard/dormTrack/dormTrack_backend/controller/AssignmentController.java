@@ -8,6 +8,7 @@ import com.cboard.dormTrack.dormTrack_backend.repository.AssignmentRepository;
 import com.cboard.dormTrack.dormTrack_backend.repository.RoomRepository;
 import com.cboard.dormTrack.dormTrack_backend.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,5 +50,13 @@ public class AssignmentController {
     @PostMapping
     public void assignRoom(@RequestBody AssignmentRequest request) {
         assignmentService.assignRoom(request);
+    }
+
+    @PostMapping("/assign-via-procedure")
+    public ResponseEntity<Integer> assignViaProcedure(@RequestBody AssignmentRequest req) {
+        int studentId = req.getStudentId();
+        int roomId = req.getRoomId();
+        Integer raId = assignmentService.assignUsingProcedure(studentId, roomId);
+        return ResponseEntity.ok(raId);
     }
 }

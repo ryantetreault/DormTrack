@@ -152,16 +152,20 @@ public class RoomAssignmentController {
         try {
             String json = objectMapper.writeValueAsString(req);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/assignments"))
+                    .uri(URI.create("http://localhost:8080/assignments/assign-via-procedure"))
                     .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .POST(HttpRequest.BodyPublishers.ofString(json)) // 'json' is the AssignmentRequest object
                     .build();
 
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(res -> Platform.runLater(() -> {
-                        loadAssignments();
-                        showAlert(Alert.AlertType.INFORMATION, "Room assigned successfully.");
-                    }));
+                    .thenApply(HttpResponse::body)
+                    .thenAccept(body -> {
+                        System.out.println("RA assigned: " + body);
+                        Platform.runLater(() -> {
+                            loadAssignments();
+                            showAlert(Alert.AlertType.INFORMATION, "Room and RA assigned!");
+                        });
+                    });
 
         } catch (Exception e) {
             e.printStackTrace();

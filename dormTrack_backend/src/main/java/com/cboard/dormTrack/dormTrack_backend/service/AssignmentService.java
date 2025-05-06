@@ -7,8 +7,12 @@ import com.cboard.dormTrack.dormTrack_backend.model.Assignment;
 import com.cboard.dormTrack.dormTrack_backend.repository.AssignmentRepository;
 import com.cboard.dormTrack.dormTrack_common.dto.AssignmentRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +29,9 @@ public class AssignmentService {
     public AssignmentService(AssignmentRepository assignmentRepository) {
         this.assignmentRepository = assignmentRepository;
     }
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public List<AssignmentDto> getAllAssignments() {
         return assignmentRepository.findAll().stream()
@@ -57,5 +64,21 @@ public class AssignmentService {
 
         room.setCurrentOccupancy(room.getCurrentOccupancy() + 1);
         roomRepository.save(room);
+    }
+
+    public Integer assignUsingProcedure(int studentId, int roomId) {
+        return jdbcTemplate.execute(
+                (Connection con) -> {
+                    try (CallableStatement stmt = con.prepareCall("{CALL AssignStudentToRoom(?, ?)}")) {
+                        stmt.setInt(1, studentId);
+                        stmt.setInt(2, roomId);
+                        ResultSet rs = stmt.executeQuery();
+                        if (rs.next()) {
+                            return rs.getInt("assigned_ra");
+                        }
+                        return null;
+                    }
+                }
+        );
     }
 }

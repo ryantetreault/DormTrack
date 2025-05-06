@@ -162,10 +162,17 @@ CREATE TABLE ra_notifications (
   notify_date DATETIME
 );
 
+CREATE TABLE StudentRA (
+    student_id INT PRIMARY KEY,
+    ra_id INT,
+    FOREIGN KEY (student_id) REFERENCES Student(student_id),
+    FOREIGN KEY (ra_id) REFERENCES RA(ra_id)
+);
+
 
 -- VIEWS
 -- current students in each dorm/floor with RA names
-CREATE VIEW current_students_by_floor AS
+CREATE OR REPLACE VIEW current_students_by_floor AS
 SELECT
     s.name AS student_name,
     r.floor,
@@ -175,9 +182,26 @@ FROM student s
 JOIN room_assignment ra_assign ON s.student_id = ra_assign.student_id
 JOIN room r ON ra_assign.room_id = r.room_id
 JOIN dorm d ON r.dorm_id = d.dorm_id
-JOIN ra ON ra.assigned_dorm = d.dorm_id
-WHERE ra_assign.date_vacated IS NULL;
+JOIN studentra sra ON s.student_id = sra.student_id
+JOIN ra ON sra.ra_id = ra.ra_id
+WHERE ra_assign.date_vacated IS NULL
+ORDER BY r.floor, d.name, s.name;
 
+-- filters available rooms by dorm
+CREATE OR REPLACE VIEW AvailableRoomsInDorm AS
+SELECT
+    r.room_id,
+    r.dorm_id,
+    d.name AS dorm_name,
+    r.floor,
+    r.capacity,
+    r.current_occupancy
+FROM
+    Room r
+JOIN
+    Dorm d ON r.dorm_id = d.dorm_id
+WHERE
+    r.current_occupancy < r.capacity;
 
 -- unresolved maintenance requests sorted by urgency
 CREATE VIEW open_maintenance_requests AS
@@ -208,30 +232,79 @@ HAVING COUNT(rch.change_id) > 1;
 
 
 -- PROCEDURES
--- assign student to a room based on availability and preference
+-- assign a random ra from dorm for room
 DELIMITER $$
-CREATE PROCEDURE assign_student_to_room(IN sid INT)
+CREATE PROCEDURE AssignRAtoStudent (
+    IN p_student_id INT
+)
 BEGIN
-  DECLARE pref_floor INT;
-  DECLARE found_room INT;
+    DECLARE v_room_id INT;
+    DECLARE v_dorm_id INT;
+    DECLARE v_ra_id INT;
 
-  SELECT preferred_floor INTO pref_floor
-  FROM room_preference WHERE student_id = sid;
+    -- get the room assigned to the student (most recent active assignment)
+    SELECT room_id INTO v_room_id
+    FROM room_assignment
+    WHERE student_id = p_student_id AND date_vacated IS NULL
+    ORDER BY date_assigned DESC
+    LIMIT 1;
 
-  SELECT room_id INTO found_room
-  FROM room
-  WHERE current_occupancy < capacity
-    AND (pref_floor IS NULL OR floor = pref_floor)
-  ORDER BY floor
-  LIMIT 1;
+    -- get the dorm from the room
+    SELECT dorm_id INTO v_dorm_id
+    FROM room
+    WHERE room_id = v_room_id;
 
-  IF found_room IS NOT NULL THEN
+    -- pick a random RA for that dorm
+    SELECT ra_id INTO v_ra_id
+    FROM ra
+    WHERE assigned_dorm = v_dorm_id
+    ORDER BY RAND()
+    LIMIT 1;
+
+    -- update the assignment with the chosen RA
+    UPDATE room_assignment
+    SET assigned_ra_id = v_ra_id
+    WHERE student_id = p_student_id AND room_id = v_room_id
+    AND date_vacated IS NULL;
+
+    -- return the assigned RA
+    SELECT v_ra_id AS assigned_ra;
+END$$
+DELIMITER ;
+
+-- assign student to a room
+ALTER TABLE room_assignment ADD assigned_ra_id INT;
+
+
+DELIMITER $$
+DELIMITER $$
+CREATE PROCEDURE AssignStudentToRoom
+(
+    IN p_student_id INT,
+    IN p_room_id INT
+)
+BEGIN
+    DECLARE v_dorm_id INT;
+    DECLARE v_ra_id INT;
+
+    SELECT dorm_id INTO v_dorm_id FROM room WHERE room_id = p_room_id;
+
+    SELECT ra_id INTO v_ra_id
+    FROM ra
+    WHERE assigned_dorm = v_dorm_id
+    ORDER BY RAND()
+    LIMIT 1;
+
     INSERT INTO room_assignment (student_id, room_id, date_assigned)
-    VALUES (sid, found_room, CURDATE());
+    VALUES (p_student_id, p_room_id, CURDATE());
 
-    UPDATE room SET current_occupancy = current_occupancy + 1
-    WHERE room_id = found_room;
-  END IF;
+    UPDATE room
+    SET current_occupancy = current_occupancy + 1
+    WHERE room_id = p_room_id;
+
+    INSERT INTO StudentRA (student_id, ra_id) VALUES (p_student_id, v_ra_id);
+
+    SELECT v_ra_id AS assigned_ra;
 END$$
 DELIMITER ;
 
@@ -340,6 +413,11 @@ INSERT INTO student (student_id, name, gender, year, email) VALUES (4, 'Dana Lop
 -- DORMS
 INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (1, 'Hawthorne Hall', 'North Campus', 5);
 INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (2, 'Maple Hall', 'South Campus', 4);
+INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (3, 'Oak Hall', 'East Campus', 6);
+INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (4, 'Birch Hall', 'West Campus', 3);
+INSERT INTO dorm (dorm_id, name, location, total_floors) VALUES (5, 'Cedar Hall', 'Central Campus', 4);
+
+-- ------------------------------------------------------------------------------------------------------------------
 
 -- ROOMS
 INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (1, 1, 1, 2, 1);
@@ -347,10 +425,37 @@ INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (
 INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (3, 2, 1, 2, 1);
 INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (4, 2, 2, 1, 0);
 
+-- Hawthorne Hall (Dorm 1)
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (5, 1, 3, 2, 0);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (6, 1, 4, 1, 0);
+
+-- Maple Hall (Dorm 2)
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (7, 2, 3, 2, 1);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (8, 2, 4, 1, 0);
+
+-- Oak Hall (Dorm 3)
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (9, 3, 1, 2, 2);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (10, 3, 2, 1, 0);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (11, 3, 5, 2, 1);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (12, 3, 6, 1, 0);
+
+-- Birch Hall (Dorm 4)
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (13, 4, 1, 2, 0);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (14, 4, 2, 1, 1);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (15, 4, 3, 2, 0);
+
+-- Cedar Hall (Dorm 5)
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (16, 5, 1, 2, 2);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (17, 5, 2, 2, 1);
+INSERT INTO room (room_id, dorm_id, floor, capacity, current_occupancy) VALUES (18, 5, 4, 1, 0);
+
+-- ------------------------------------------------------------------------------------------------------------------
+
 -- ROOM ASSIGNMENTS
 INSERT INTO room_assignment (assignment_id, student_id, room_id, date_assigned, date_vacated) VALUES (1, 1, 1, '2025-01-15', NULL);
 INSERT INTO room_assignment (assignment_id, student_id, room_id, date_assigned, date_vacated) VALUES (2, 2, 3, '2025-02-01', NULL);
 INSERT INTO room_assignment (assignment_id, student_id, room_id, date_assigned, date_vacated) VALUES (3, 3, 4, '2025-01-10', NULL);
+
 
 -- MAINTENANCE REQUESTS
 INSERT INTO maintenance_request (request_id, student_id, room_id, issue_description, date_submitted, status) VALUES (1, 1, 1, 'Leaky faucet', '2025-04-10', 'Open');
@@ -360,6 +465,16 @@ INSERT INTO maintenance_request (request_id, student_id, room_id, issue_descript
 -- RAs
 INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (1, 'Emily Carter', '555-1234', 1);
 INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (2, 'James Lee', '555-5678', 2);
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (3, 'Sophia Martinez', '555-9012', 3);
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (4, 'Liam Johnson', '555-3456', 3);
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (5, 'Olivia Nguyen', '555-7890', 4);
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (6, 'Noah Davis', '555-2345', 4);
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (7, 'Emma Patel', '555-6789', 5);
+INSERT INTO ra (ra_id, name, phone, assigned_dorm) VALUES (8, 'William Kim', '555-4321', 5);
+
+INSERT INTO StudentRA (student_id, ra_id) VALUES (1, 1);
+INSERT INTO StudentRA (student_id, ra_id) VALUES (2, 2);
+INSERT INTO StudentRA (student_id, ra_id) VALUES (3, 2);
 
 -- ROOM INSPECTIONS
 INSERT INTO room_inspection (inspection_id, ra_id, room_id, inspection_date, notes, result) VALUES (1, 1, 1, '2025-04-01', 'Clean and in good condition', 'Pass');
