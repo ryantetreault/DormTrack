@@ -27,7 +27,7 @@ public class DashboardController {
 
     @FXML
     private void handleMaintenance(ActionEvent event) {
-        switchScene(event, "view/maintenance_view.fxml");
+        switchScene(event, "/com/cboard/dormTrack/dormTrack_frontend/maintenance_view.fxml");
     }
 
     @FXML

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+
+<VBox spacing="15" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.ResolvedRequestsController"
+      style="-fx-padding: 20; -fx-background-color: #ffffff;">
+
+    <Label text="Resolved Maintenance Requests"
+           style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="resolvedTable" prefHeight="300">
+        <columns>
+            <TableColumn fx:id="idCol" text="ID" prefWidth="60">
+                <cellValueFactory>
+                    <PropertyValueFactory property="requestId"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="studentCol" text="Student" prefWidth="150">
+                <cellValueFactory>
+                    <PropertyValueFactory property="studentName"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="issueCol" text="Issue" prefWidth="300">
+                <cellValueFactory>
+                    <PropertyValueFactory property="issueDescription"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="resolvedByCol" text="Resolved By" prefWidth="150">
+                <cellValueFactory>
+                    <PropertyValueFactory property="resolvedBy"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="dateCol" text="Date Resolved" prefWidth="150">
+                <cellValueFactory>
+                    <PropertyValueFactory property="resolutionDate"/>
+                </cellValueFactory>
+            </TableColumn>
+        </columns>
+    </TableView>
+    <HBox spacing="10">
+        <Button text="Back to Dashboard" onAction="#handleBack"/>
+    </HBox>
+</VBox>

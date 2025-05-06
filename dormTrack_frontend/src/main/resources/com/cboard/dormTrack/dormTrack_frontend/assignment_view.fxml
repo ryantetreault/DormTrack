@@ -14,7 +14,7 @@
       fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.RoomAssignmentController"
       prefWidth="600" prefHeight="500">
 
-    <Label text="Room Assignment" styleClass="heading"/>
+    <Label text="Room Assignment" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
 
     <GridPane hgap="15" vgap="15">
         <columnConstraints>
