@@ -154,19 +154,25 @@ public class RoomAssignmentController {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:8080/assignments/assign-via-procedure"))
                     .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(json)) // 'json' is the AssignmentRequest object
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenApply(HttpResponse::body)
-                    .thenAccept(body -> {
-                        System.out.println("RA assigned: " + body);
+                    .thenAccept(response -> {
+                        int status = response.statusCode();
+                        String body = response.body();
+
                         Platform.runLater(() -> {
-                            loadAssignments();
-                            showAlert(Alert.AlertType.INFORMATION, "Room and RA assigned!");
+                            if (status == 200 || status == 201) {
+                                loadAssignments();
+                                showAlert(Alert.AlertType.INFORMATION, "Room and RA assigned!");
+                            } else if (body.contains("Student already assigned to a room")) {
+                                showAlert(Alert.AlertType.ERROR, "Student already assigned to a room.");
+                            } else {
+                                showAlert(Alert.AlertType.ERROR, "Assignment failed: " + body);
+                            }
                         });
                     });
-
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error sending assignment.");

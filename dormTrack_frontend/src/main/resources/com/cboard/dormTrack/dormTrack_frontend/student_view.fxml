@@ -4,6 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <VBox spacing="15" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.StudentController"
@@ -14,11 +15,31 @@
     <TableView fx:id="studentTable" prefHeight="300">
         <columns>
             <TableColumn fx:id="actionCol" text="Actions"/>
-            <TableColumn fx:id="idCol" text="ID"/>
-            <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
-            <TableColumn fx:id="genderCol" text="Gender"/>
-            <TableColumn fx:id="yearCol" text="Year"/>
-            <TableColumn fx:id="emailCol" text="Email" prefWidth="250"/>
+            <TableColumn fx:id="idCol" text="ID">
+                <cellValueFactory>
+                    <PropertyValueFactory property="studentId"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="nameCol" text="Name" prefWidth="150">
+                <cellValueFactory>
+                    <PropertyValueFactory property="name"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="genderCol" text="Gender">
+                <cellValueFactory>
+                    <PropertyValueFactory property="gender"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="yearCol" text="Year">
+                <cellValueFactory>
+                    <PropertyValueFactory property="year"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="emailCol" text="Email" prefWidth="250">
+                <cellValueFactory>
+                    <PropertyValueFactory property="email"/>
+                </cellValueFactory>
+            </TableColumn>
         </columns>
     </TableView>
 

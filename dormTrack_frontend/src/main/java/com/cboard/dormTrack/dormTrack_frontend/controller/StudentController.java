@@ -21,23 +21,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class StudentController {
 
-    @FXML private TableView<StudentDto> studentTable;
-    @FXML private TableColumn<StudentDto, Integer> idCol;
-    @FXML private TableColumn<StudentDto, String> nameCol;
-    @FXML private TableColumn<StudentDto, String> genderCol;
-    @FXML private TableColumn<StudentDto, Integer> yearCol;
-    @FXML private TableColumn<StudentDto, String> emailCol;
-    @FXML private TableColumn<StudentDto, Void> actionCol;
+    @FXML
+    private TableView<StudentDto> studentTable;
+
+    @FXML
+    private TableColumn<StudentDto, Void> actionCol;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @FXML
     public void initialize() {
-        idCol.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getStudentId()));
-        nameCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getName()));
-        genderCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getGender()));
-        yearCol.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getYear()));
-        emailCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getEmail()));
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button editBtn = new Button("Edit");
 
@@ -98,7 +91,6 @@ public class StudentController {
 
                 HttpClient.newHttpClient().sendAsync(request, HttpResponse.BodyHandlers.ofString())
                         .thenAccept(response -> {
-                            System.out.println("Student added!");
                             handleLoadStudents(); // reload list after adding
                         });
 
