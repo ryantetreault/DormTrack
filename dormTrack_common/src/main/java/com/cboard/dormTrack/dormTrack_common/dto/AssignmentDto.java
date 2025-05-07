@@ -1,9 +1,7 @@
 package com.cboard.dormTrack.dormTrack_common.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
 
-@Data
 public class AssignmentDto {
 
     @JsonProperty("assignment_id")
@@ -12,6 +10,7 @@ public class AssignmentDto {
     private String roomLabel;
     private String dateAssigned;
     private String dateVacated;
+    private int dormId;
 
     public AssignmentDto() {}
 
@@ -21,6 +20,15 @@ public class AssignmentDto {
         this.roomLabel = roomLabel;
         this.dateAssigned = dateAssigned;
         this.dateVacated = dateVacated;
+    }
+
+    public AssignmentDto(int assignmentId, String studentName, String roomLabel, String dateAssigned, String dateVacated, int dormId) {
+        this.assignmentId = assignmentId;
+        this.studentName = studentName;
+        this.roomLabel = roomLabel;
+        this.dateAssigned = dateAssigned;
+        this.dateVacated = dateVacated;
+        this.dormId = dormId;
     }
 
     public int getAssignmentId() {
@@ -61,5 +69,13 @@ public class AssignmentDto {
 
     public void setDateVacated(String dateVacated) {
         this.dateVacated = dateVacated;
+    }
+
+    public int getDormId() {
+        return dormId;
+    }
+
+    public void setDormId(int dormId) {
+        this.dormId = dormId;
     }
 }

@@ -1,12 +1,14 @@
 package com.cboard.dormTrack.dormTrack_backend.controller;
 
+import com.cboard.dormTrack.dormTrack_backend.repository.AssignmentRepository;
 import com.cboard.dormTrack.dormTrack_backend.service.AssignmentService;
 import com.cboard.dormTrack.dormTrack_common.dto.AssignmentDto;
 import com.cboard.dormTrack.dormTrack_common.dto.AssignmentRequest;
-import com.cboard.dormTrack.dormTrack_backend.model.Assignment;
-import com.cboard.dormTrack.dormTrack_backend.repository.AssignmentRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import com.cboard.dormTrack.dormTrack_backend.repository.RoomRepository;
 import com.cboard.dormTrack.dormTrack_backend.repository.StudentRepository;
+import com.cboard.dormTrack.dormTrack_common.dto.RoomChangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,9 @@ public class AssignmentController {
     private final AssignmentService assignmentService;
 
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     public AssignmentController(AssignmentService assignmentService) {
         this.assignmentService = assignmentService;
     }
@@ -42,14 +47,10 @@ public class AssignmentController {
                         a.getStudent().getName(),
                         "Room " + a.getRoom().getRoomId(),
                         a.getDateAssigned() != null ? a.getDateAssigned().toString() : "",
-                        a.getDateVacated() != null ? a.getDateVacated().toString() : ""
+                        a.getDateVacated() != null ? a.getDateVacated().toString() : "",
+                        a.getRoom().getDorm().getDormId()
                 ))
                 .toList();
-    }
-
-    @PostMapping
-    public void assignRoom(@RequestBody AssignmentRequest request) {
-        assignmentService.assignRoom(request);
     }
 
     @PostMapping("/assign-via-procedure")
@@ -58,5 +59,15 @@ public class AssignmentController {
         int roomId = req.getRoomId();
         Integer raId = assignmentService.assignUsingProcedure(studentId, roomId);
         return ResponseEntity.ok(raId);
+    }
+
+    @PostMapping("/change-room")
+    public ResponseEntity<String> changeStudentRoom(@RequestBody RoomChangeRequest request) {
+        try {
+            jdbcTemplate.update("CALL ChangeStudentRoom(?, ?)", request.getStudentId(), request.getNewRoomId());
+            return ResponseEntity.ok("Room changed successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
     }
 }

@@ -35,7 +35,7 @@ public class AddStudentDialog {
         grid.add(yearField, 1, 2);
         grid.add(new Label("Email:"), 0, 3);
         grid.add(emailField, 1, 3);
-        grid.add(errorLabel, 1, 4); // Add error label to grid
+        grid.add(errorLabel, 1, 4); // add error label to grid
 
         dialog.getDialogPane().setContent(grid);
 
@@ -46,9 +46,9 @@ public class AddStudentDialog {
             if (!email.endsWith("@westfield.ma.edu")) {
                 errorLabel.setText("Email must end with @westfield.ma.edu");
                 errorLabel.setVisible(true);
-                event.consume(); // Prevent dialog from closing
+                event.consume(); // prevent dialog from closing
             } else {
-                errorLabel.setVisible(false); // Clear any previous errors
+                errorLabel.setVisible(false); // clear any previous errors
             }
         });
 

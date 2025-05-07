@@ -11,6 +11,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -23,6 +24,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public class RoomAssignmentController {
 
@@ -44,6 +46,9 @@ public class RoomAssignmentController {
     private TableColumn<AssignmentDto, String> colAssigned;
     @FXML
     private TableColumn<AssignmentDto, String> colVacated;
+    @FXML
+    private TableColumn<AssignmentDto, Void> actionCol;
+
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -62,6 +67,23 @@ public class RoomAssignmentController {
             if (selected != null) {
                 System.out.println("Dorm selected: " + selected.getName());
                 loadRoomsByDormId(selected.getDormId());
+            }
+        });
+
+        actionCol.setCellFactory(col -> new TableCell<>() {
+            private final Button changeBtn = new Button("Edit");
+
+            {
+                changeBtn.setOnAction(e -> {
+                    AssignmentDto assignment = getTableView().getItems().get(getIndex());
+                    showChangeRoomDialog(assignment);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : changeBtn);
             }
         });
     }
@@ -242,5 +264,94 @@ public class RoomAssignmentController {
                         e.printStackTrace();
                     }
                 });
+    }
+
+    private void showChangeRoomDialog(AssignmentDto assignment) {
+        Dialog<Integer> dialog = new Dialog<>();
+        dialog.setTitle("Change Room for " + assignment.getStudentName());
+
+        ButtonType changeButton = new ButtonType("Change", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(changeButton, ButtonType.CANCEL);
+
+        ComboBox<RoomDto> roomBox = new ComboBox<>();
+        roomBox.setPrefWidth(250);
+
+        // reuse loadRoomsByDormId, adapt it for roomBox instead of roomComboBox
+        loadRoomsForDialog(roomBox, assignment.getDormId());
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.addRow(0, new Label("New Room:"), roomBox);
+
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(button -> {
+            if (button == changeButton && roomBox.getValue() != null) {
+                return roomBox.getValue().getRoomId();
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(newRoomId -> {
+            int studentId = studentComboBox.getItems().stream()
+                    .filter(s -> s.getName().equals(assignment.getStudentName()))
+                    .findFirst()
+                    .map(StudentDto::getStudentId)
+                    .orElseThrow();
+
+            sendChangeRoomRequest(studentId, newRoomId);
+        });
+    }
+
+    private void loadRoomsForDialog(ComboBox<RoomDto> box, int dormId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/dorms/available/by-dorm/" + dormId))
+                .GET().build();
+
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenAccept(json -> {
+                    try {
+                        List<RoomDto> rooms = objectMapper.readValue(json, new TypeReference<>() {});
+                        Platform.runLater(() -> {
+                            box.setItems(FXCollections.observableArrayList(rooms));
+                            box.setConverter(new StringConverter<>() {
+                                public String toString(RoomDto r) {
+                                    return "Room " + r.getRoomId() + " (Floor " + r.getFloor() + ")";
+                                }
+                                public RoomDto fromString(String s) { return null; }
+                            });
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+    }
+
+    private void sendChangeRoomRequest(int studentId, int newRoomId) {
+        try {
+            Map<String, Object> requestData = Map.of(
+                    "studentId", studentId,
+                    "newRoomId", newRoomId
+            );
+
+            String json = objectMapper.writeValueAsString(requestData);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8080/assignments/change-room"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenAccept(response -> Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.INFORMATION, "Room changed successfully.");
+                        loadAssignments(); // Refresh the table
+                    }));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Failed to change room."));
+        }
     }
 }

@@ -49,6 +49,7 @@
 
     <TableView fx:id="assignmentTable" prefHeight="250">
         <columns>
+            <TableColumn fx:id="actionCol" text="Actions"/>
             <TableColumn fx:id="colStudent" text="Student"/>
             <TableColumn fx:id="colRoom" text="Room"/>
             <TableColumn fx:id="colAssigned" text="Date Assigned"/>
