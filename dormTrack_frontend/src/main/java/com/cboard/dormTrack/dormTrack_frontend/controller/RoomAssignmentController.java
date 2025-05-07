@@ -25,6 +25,7 @@ import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class RoomAssignmentController {
 
@@ -267,40 +268,42 @@ public class RoomAssignmentController {
     }
 
     private void showChangeRoomDialog(AssignmentDto assignment) {
-        Dialog<Integer> dialog = new Dialog<>();
-        dialog.setTitle("Change Room for " + assignment.getStudentName());
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Assignment for " + assignment.getStudentName());
 
         ButtonType changeButton = new ButtonType("Change", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(changeButton, ButtonType.CANCEL);
+        ButtonType moveOutBtn = new ButtonType("Move Out", ButtonBar.ButtonData.LEFT);
+        dialog.getDialogPane().getButtonTypes().addAll(changeButton, moveOutBtn, ButtonType.CANCEL);
 
         ComboBox<RoomDto> roomBox = new ComboBox<>();
         roomBox.setPrefWidth(250);
 
-        // reuse loadRoomsByDormId, adapt it for roomBox instead of roomComboBox
+        // Load available rooms into the dialog-specific ComboBox
         loadRoomsForDialog(roomBox, assignment.getDormId());
 
         GridPane grid = new GridPane();
-        grid.setHgap(10); grid.setVgap(10);
+        grid.setHgap(10);
+        grid.setVgap(10);
         grid.addRow(0, new Label("New Room:"), roomBox);
 
         dialog.getDialogPane().setContent(grid);
 
-        dialog.setResultConverter(button -> {
-            if (button == changeButton && roomBox.getValue() != null) {
-                return roomBox.getValue().getRoomId();
-            }
-            return null;
-        });
+        dialog.setResultConverter(button -> button);
+        Optional<ButtonType> result = dialog.showAndWait();
 
-        dialog.showAndWait().ifPresent(newRoomId -> {
+        if (result.isPresent()) {
             int studentId = studentComboBox.getItems().stream()
                     .filter(s -> s.getName().equals(assignment.getStudentName()))
                     .findFirst()
                     .map(StudentDto::getStudentId)
                     .orElseThrow();
 
-            sendChangeRoomRequest(studentId, newRoomId);
-        });
+            if (result.get() == changeButton && roomBox.getValue() != null) {
+                sendChangeRoomRequest(studentId, roomBox.getValue().getRoomId());
+            } else if (result.get() == moveOutBtn) {
+                moveOutStudent(studentId);
+            }
+        }
     }
 
     private void loadRoomsForDialog(ComboBox<RoomDto> box, int dormId) {
@@ -352,6 +355,27 @@ public class RoomAssignmentController {
         } catch (Exception e) {
             e.printStackTrace();
             Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Failed to change room."));
+        }
+    }
+
+    private void moveOutStudent(int studentId) {
+        try {
+            String json = objectMapper.writeValueAsString(Map.of("studentId", studentId));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8080/assignments/move-out"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenAccept(response -> Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.INFORMATION, "Student moved out.");
+                        loadAssignments(); // refresh table
+                    }));
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Failed to move out.");
         }
     }
 }

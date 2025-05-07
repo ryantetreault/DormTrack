@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/assignments")
@@ -68,6 +69,18 @@ public class AssignmentController {
             return ResponseEntity.ok("Room changed successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/move-out")
+    public ResponseEntity<String> moveOutStudent(@RequestBody Map<String, Integer> body) {
+        Integer studentId = body.get("studentId");
+        try {
+            jdbcTemplate.update("CALL MoveStudentOut(?)", studentId);
+            return ResponseEntity.ok("Student moved out.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error: " + e.getMessage());
         }
     }
 }
