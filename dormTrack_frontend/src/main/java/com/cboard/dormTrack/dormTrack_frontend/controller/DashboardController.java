@@ -31,6 +31,11 @@ public class DashboardController {
     }
 
     @FXML
+    private void handleRoomChangeHistory(ActionEvent event) {
+        switchScene(event, "/com/cboard/dormTrack/dormTrack_frontend/room_change_history_view.fxml");
+    }
+
+    @FXML
     private void handleInspections(ActionEvent event) {
         switchScene(event, "view/inspection_view.fxml");
     }

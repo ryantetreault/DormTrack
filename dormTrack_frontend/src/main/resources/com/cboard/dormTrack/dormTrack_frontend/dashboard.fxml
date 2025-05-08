@@ -16,6 +16,7 @@
     <Button text="Students By Floor" onAction="#handleStudentsByFloor"/>
     <Button text="Room Assignments" onAction="#handleAssignments"/>
     <Button text="Maintenance Requests" onAction="#handleMaintenance"/>
+    <Button text="Room Change History" onAction="#handleRoomChangeHistory"/>
     <Button text="RA Inspections" onAction="#handleInspections"/>
     <Button text="Dorm Events" onAction="#handleEvents"/>
 

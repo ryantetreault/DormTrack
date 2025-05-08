@@ -187,22 +187,6 @@ JOIN ra ON sra.ra_id = ra.ra_id
 WHERE ra_assign.date_vacated IS NULL
 ORDER BY r.floor, d.name, s.name;
 
--- filters available rooms by dorm
-CREATE OR REPLACE VIEW AvailableRoomsInDorm AS
-SELECT
-    r.room_id,
-    r.dorm_id,
-    d.name AS dorm_name,
-    r.floor,
-    r.capacity,
-    r.current_occupancy
-FROM
-    Room r
-JOIN
-    Dorm d ON r.dorm_id = d.dorm_id
-WHERE
-    r.current_occupancy < r.capacity;
-
 -- unresolved maintenance requests sorted by urgency
 CREATE VIEW open_maintenance_requests AS
 SELECT
@@ -219,64 +203,39 @@ ORDER BY
     mr.date_submitted;
 
 
--- students with more than one room change
-CREATE VIEW frequent_room_changers AS
+-- resolved maintenance requests
+CREATE VIEW resolved_maintenance_requests AS
 SELECT
-    s.student_id,
-    s.name,
-    COUNT(rch.change_id) AS num_changes
-FROM student s
-JOIN room_change_history rch ON s.student_id = rch.student_id
-GROUP BY s.student_id
-HAVING COUNT(rch.change_id) > 1;
+    mr.request_id,
+    s.name AS student_name,
+    mr.issue_description,
+    l.resolved_by,
+    l.resolution_date
+FROM maintenance_request mr
+JOIN student s ON mr.student_id = s.student_id
+JOIN maintenance_request_log l ON mr.request_id = l.request_id
+ORDER BY l.resolution_date DESC;
+
+
+-- display room change history
+CREATE OR REPLACE VIEW room_change_history_view AS
+SELECT
+    s.name AS studentName,
+    CONCAT('Room ', old.room_id, ' (Floor ', old.floor, ')') AS oldRoomLabel,
+    CONCAT('Room ', newr.room_id, ' (Floor ', newr.floor, ')') AS newRoomLabel,
+    rch.change_date AS changeDate
+FROM room_change_history rch
+JOIN student s ON rch.student_id = s.student_id
+LEFT JOIN room old ON rch.old_room_id = old.room_id
+LEFT JOIN room newr ON rch.new_room_id = newr.room_id
+ORDER BY rch.change_date DESC;
+
 
 
 -- PROCEDURES
--- assign a random ra from dorm for room
-DELIMITER $$
-CREATE PROCEDURE AssignRAtoStudent (
-    IN p_student_id INT
-)
-BEGIN
-    DECLARE v_room_id INT;
-    DECLARE v_dorm_id INT;
-    DECLARE v_ra_id INT;
-
-    -- get the room assigned to the student (most recent active assignment)
-    SELECT room_id INTO v_room_id
-    FROM room_assignment
-    WHERE student_id = p_student_id AND date_vacated IS NULL
-    ORDER BY date_assigned DESC
-    LIMIT 1;
-
-    -- get the dorm from the room
-    SELECT dorm_id INTO v_dorm_id
-    FROM room
-    WHERE room_id = v_room_id;
-
-    -- pick a random RA for that dorm
-    SELECT ra_id INTO v_ra_id
-    FROM ra
-    WHERE assigned_dorm = v_dorm_id
-    ORDER BY RAND()
-    LIMIT 1;
-
-    -- update the assignment with the chosen RA
-    UPDATE room_assignment
-    SET assigned_ra_id = v_ra_id
-    WHERE student_id = p_student_id AND room_id = v_room_id
-    AND date_vacated IS NULL;
-
-    -- return the assigned RA
-    SELECT v_ra_id AS assigned_ra;
-END$$
-DELIMITER ;
-
--- assign student to a room
+-- assign student to a room, with random ra from that hall
 ALTER TABLE room_assignment ADD assigned_ra_id INT;
 
-
-DELIMITER $$
 DELIMITER $$
 CREATE PROCEDURE AssignStudentToRoom
 (
@@ -323,6 +282,75 @@ END$$
 DELIMITER ;
 
 
+
+-- change a students room
+DELIMITER $$
+CREATE PROCEDURE ChangeStudentRoom
+(
+    IN p_student_id INT,
+    IN p_new_room_id INT
+)
+BEGIN
+    DECLARE v_old_room_id INT;
+    DECLARE v_assignment_id INT;
+
+    -- find current active assignment
+    SELECT assignment_id, room_id INTO v_assignment_id, v_old_room_id
+    FROM room_assignment
+    WHERE student_id = p_student_id AND date_vacated IS NULL
+    LIMIT 1;
+
+    -- mark old assignment as vacated
+    UPDATE room_assignment
+    SET date_vacated = CURDATE()
+    WHERE assignment_id = v_assignment_id;
+
+    -- decrease occupancy on old room
+    UPDATE room
+    SET current_occupancy = current_occupancy - 1
+    WHERE room_id = v_old_room_id;
+
+    -- insert new assignment (trigger will check capacity)
+    INSERT INTO room_assignment (student_id, room_id, date_assigned)
+    VALUES (p_student_id, p_new_room_id, CURDATE());
+
+    -- increase occupancy on new room
+    UPDATE room
+    SET current_occupancy = current_occupancy + 1
+    WHERE room_id = p_new_room_id;
+
+    -- RoomChangeHistory will be logged via trigger
+END$$
+DELIMITER ;
+
+
+-- move student out
+DELIMITER $$
+CREATE PROCEDURE MoveStudentOut(IN p_student_id INT)
+BEGIN
+    DECLARE v_room_id INT;
+    DECLARE v_assignment_id INT;
+
+    -- get current assignment
+    SELECT assignment_id, room_id INTO v_assignment_id, v_room_id
+    FROM room_assignment
+    WHERE student_id = p_student_id AND date_vacated IS NULL
+    LIMIT 1;
+
+    -- mark as vacated
+    UPDATE room_assignment
+    SET date_vacated = CURDATE()
+    WHERE assignment_id = v_assignment_id;
+
+    -- decrease occupancy
+    UPDATE room
+    SET current_occupancy = current_occupancy - 1
+    WHERE room_id = v_room_id;
+END$$
+DELIMITER ;
+
+
+
 -- generate dorm occupancy summary
 DELIMITER $$
 CREATE PROCEDURE dorm_occupancy_report()
@@ -342,61 +370,46 @@ DELIMITER ;
 
 
 -- TRIGGERS
--- log to RoomChangeHistory when RoomAssignments are updated
 DELIMITER $$
-CREATE TRIGGER log_room_change
-AFTER UPDATE ON room_assignment
+CREATE TRIGGER log_room_insert
+AFTER INSERT ON room_assignment
 FOR EACH ROW
 BEGIN
-  IF OLD.room_id <> NEW.room_id THEN
-    INSERT INTO room_change_history (student_id, old_room_id, new_room_id, change_date)
-    VALUES (NEW.student_id, OLD.room_id, NEW.room_id, CURDATE());
-  END IF;
+	DECLARE v_last_room_id INT;
+
+	SELECT room_id INTO v_last_room_id
+	FROM room_assignment
+		WHERE student_id = NEW.student_id AND date_vacated IS NOT NULL
+		ORDER BY date_vacated DESC
+		LIMIT 1;
+
+	IF v_last_room_id IS NOT NULL THEN
+		INSERT INTO room_change_history (student_id, old_room_id, new_room_id, change_date)
+		VALUES (NEW.student_id, v_last_room_id, NEW.room_id, CURDATE());
+	END IF;
 END$$
 DELIMITER ;
 
 
--- mock email RA on new MaintenanceRequest
+-- blocks multiple room assignemnts to same student
 DELIMITER $$
-CREATE TRIGGER notify_ra_new_request
-AFTER INSERT ON maintenance_request
-FOR EACH ROW
-BEGIN
-  DECLARE dorm_id INT;
-  DECLARE ra_name VARCHAR(100);
-
-  SELECT r.dorm_id INTO dorm_id FROM room r WHERE r.room_id = NEW.room_id;
-  SELECT ra.name INTO ra_name FROM ra WHERE ra.assigned_dorm = dorm_id LIMIT 1;
-
-  -- Mocking with INSERT into log table
-  INSERT INTO ra_notifications (ra_name, message, notify_date)
-  VALUES (
-    ra_name,
-    CONCAT('New maintenance request submitted for dorm ', dorm_id),
-    NOW()
-  );
-END$$
-DELIMITER ;
-
-
--- before insert on RoomAssignment: check capacity
-DELIMITER $$
-CREATE TRIGGER check_room_capacity
+CREATE TRIGGER prevent_multiple_assignments
 BEFORE INSERT ON room_assignment
 FOR EACH ROW
 BEGIN
-  DECLARE cap INT;
-  DECLARE occ INT;
+    DECLARE existing_count INT;
 
-  SELECT capacity, current_occupancy INTO cap, occ
-  FROM room WHERE room_id = NEW.room_id;
+    SELECT COUNT(*) INTO existing_count
+    FROM room_assignment
+    WHERE student_id = NEW.student_id AND date_vacated IS NULL;
 
-  IF occ >= cap THEN
-    SIGNAL SQLSTATE '45000'
-    SET MESSAGE_TEXT = 'Room is already full!';
-  END IF;
+    IF existing_count > 0 THEN
+        SIGNAL SQLSTATE '45000'
+		SET MESSAGE_TEXT = 'Student already assigned to a room.';
+    END IF;
 END$$
 DELIMITER ;
+
 
 
 --
@@ -540,7 +553,7 @@ INSERT INTO room_change_history (change_id, student_id, old_room_id, new_room_id
 INSERT INTO room_change_history (change_id, student_id, old_room_id, new_room_id, change_date) VALUES (3, 2, 3, 2, '2025-04-01');
 
 -- MAINTENANCE REQUEST LOG
-INSERT INTO maintenance_request_log (log_id, request_id, resolved_by, resolution_date) VALUES (1, 2, 'RA James Lee', '2025-04-13');
+INSERT INTO maintenance_request_log (log_id, request_id, resolved_by, resolution_date) VALUES (1, 2, 'James Lee', '2025-04-13');
 
 -- DELETE RA NOTIFICATIONS
 -- DELETE FROM ra_notifications WHERE notification_id = 1;
