@@ -1,10 +1,9 @@
 package com.cboard.dormTrack.dormTrack_common.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
 
-@Data
 public class RoomDto {
+    private DormDto dorm;
     @JsonProperty("room_id")
     private int roomId;
     @JsonProperty("dorm_id")
@@ -22,6 +21,15 @@ public class RoomDto {
         this.floor = floor;
         this.capacity = capacity;
         this.currentOccupancy = currentOccupancy;
+    }
+
+    public RoomDto(int roomId, int dormId, int floor, int capacity, int currentOccupancy, DormDto dorm) {
+        this.roomId = roomId;
+        this.dormId = dormId;
+        this.floor = floor;
+        this.capacity = capacity;
+        this.currentOccupancy = currentOccupancy;
+        this.dorm = dorm;
     }
 
     public int getRoomId() {
@@ -62,5 +70,17 @@ public class RoomDto {
 
     public void setCurrentOccupancy(int currentOccupancy) {
         this.currentOccupancy = currentOccupancy;
+    }
+
+    public DormDto getDorm() {
+        return dorm;
+    }
+
+    public void setDorm(DormDto dorm) {
+        this.dorm = dorm;
+    }
+
+    public void setDormName(String dormName) {
+        this.dorm.setName(dormName);
     }
 }

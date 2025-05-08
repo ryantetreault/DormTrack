@@ -37,7 +37,7 @@ public class DashboardController {
 
     @FXML
     private void handleInspections(ActionEvent event) {
-        switchScene(event, "view/inspection_view.fxml");
+        switchScene(event, "/com/cboard/dormTrack/dormTrack_frontend/inspection_view.fxml");
     }
 
     @FXML

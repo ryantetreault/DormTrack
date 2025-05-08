@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.InspectionController"
+            style="-fx-padding: 20;">
+
+    <top>
+        <Label text="Room Inspections" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    </top>
+
+    <center>
+        <TableView fx:id="inspectionTable" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="raCol" text="RA Name">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="raName" />
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="roomCol" text="Room">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="roomLabel" />
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="dateCol" text="Date">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="inspectionDate" />
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="resultCol" text="Result">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="result" />
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="notesCol" text="Notes">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="notes" />
+                    </cellValueFactory>
+                </TableColumn>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button text="Add Inspection"/>
+            <Button text="Back" onAction="#handleBackToDashboard"/>
+        </HBox>
+    </bottom>
+</BorderPane>
