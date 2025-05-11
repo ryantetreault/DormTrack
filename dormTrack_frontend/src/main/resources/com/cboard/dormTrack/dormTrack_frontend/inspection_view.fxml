@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.layout.*?>
 
-<?import javafx.scene.control.cell.PropertyValueFactory?>
-<BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.InspectionController"
-            style="-fx-padding: 20;">
+<BorderPane style="-fx-padding: 20;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.2-ea" fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.InspectionController">
 
     <top>
-        <Label text="Room Inspections" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+        <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Room Inspections" />
     </top>
 
     <center>
         <TableView fx:id="inspectionTable" prefHeight="400">
             <columns>
-                <TableColumn fx:id="raCol" text="RA Name">
+                <TableColumn fx:id="raCol" prefWidth="138.0" text="RA Name">
                     <cellValueFactory>
                         <PropertyValueFactory property="raName" />
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn fx:id="roomCol" text="Room">
+                <TableColumn fx:id="roomCol" prefWidth="200.0" text="Room">
                     <cellValueFactory>
                         <PropertyValueFactory property="roomLabel" />
                     </cellValueFactory>
@@ -35,7 +33,7 @@
                         <PropertyValueFactory property="result" />
                     </cellValueFactory>
                 </TableColumn>
-                <TableColumn fx:id="notesCol" text="Notes">
+                <TableColumn fx:id="notesCol" prefWidth="338.0" text="Notes">
                     <cellValueFactory>
                         <PropertyValueFactory property="notes" />
                     </cellValueFactory>
@@ -45,9 +43,9 @@
     </center>
 
     <bottom>
-        <HBox spacing="10" alignment="CENTER_RIGHT">
-            <Button text="Add Inspection"/>
-            <Button text="Back" onAction="#handleBackToDashboard"/>
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Button text="Add Inspection" />
+            <Button onAction="#handleBackToDashboard" text="Back" />
         </HBox>
     </bottom>
 </BorderPane>

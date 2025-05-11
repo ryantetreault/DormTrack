@@ -30,7 +30,6 @@ public class Room {
         this.currentOccupancy = currentOccupancy;
     }
 
-    // Getters and Setters
     public int getRoomId() {
         return roomId;
     }

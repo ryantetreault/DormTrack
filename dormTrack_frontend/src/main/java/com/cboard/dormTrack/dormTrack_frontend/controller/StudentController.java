@@ -117,7 +117,7 @@ public class StudentController {
         Dialog<StudentDto> dialog = editDialog.getDialog(student);
 
         dialog.showAndWait().ifPresent(result -> {
-            if (result.getName() == null) { // deleted
+            if (result.getName() == null) {
                 deleteStudent(student.getStudentId());
             } else {
                 updateStudent(result);

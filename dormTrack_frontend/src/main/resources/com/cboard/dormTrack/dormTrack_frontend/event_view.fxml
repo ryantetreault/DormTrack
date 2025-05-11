@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.EventController">
+
+    <top>
+        <VBox spacing="10">
+            <children>
+                <GridPane hgap="10" prefWidth="600.0" vgap="10">
+                    <padding>
+                        <Insets bottom="10" left="10" right="10" top="10" />
+                    </padding>
+
+                    <Label text="Dorm:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <ComboBox fx:id="dormComboBox" prefWidth="200" promptText="Select..." GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                    <Label text="Event Title:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                    <TextField fx:id="titleField" promptText="e.g. Movie Night" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                    <Label text="Description:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                    <TextArea fx:id="descriptionField" prefColumnCount="30" prefRowCount="2" promptText="Describe the event..." GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                    <Label text="Event Date:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                    <DatePicker fx:id="datePicker" promptText="e.g. 5/10/2025" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                    <Button onAction="#handleAddEvent" text="Add Event" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                    <Button mnemonicParsing="false" onAction="#handleBack" text="Back to Dashboard" GridPane.rowIndex="4" />
+
+                    <Label text="Select Dorm:" GridPane.rowIndex="5" />
+                    <ComboBox fx:id="dormComboBox2" prefWidth="150.0" promptText="Select..." GridPane.columnIndex="1" GridPane.rowIndex="5" />
+               <columnConstraints>
+                  <ColumnConstraints />
+                  <ColumnConstraints />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" />
+               </rowConstraints>
+                </GridPane>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="eventTable" prefHeight="400" prefWidth="600">
+            <columns>
+                <TableColumn fx:id="titleCol" prefWidth="150" text="Title" />
+                <TableColumn fx:id="descCol" prefWidth="300" text="Description" />
+                <TableColumn fx:id="dateCol" prefWidth="150" text="Date" />
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

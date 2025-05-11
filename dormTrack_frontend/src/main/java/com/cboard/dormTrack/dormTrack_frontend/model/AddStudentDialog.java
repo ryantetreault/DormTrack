@@ -35,7 +35,7 @@ public class AddStudentDialog {
         grid.add(yearField, 1, 2);
         grid.add(new Label("Email:"), 0, 3);
         grid.add(emailField, 1, 3);
-        grid.add(errorLabel, 1, 4); // add error label to grid
+        grid.add(errorLabel, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
 

@@ -1,59 +1,52 @@
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TableColumn?>
-<VBox spacing="20" alignment="CENTER"
-      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.RoomAssignmentController"
-      prefWidth="600" prefHeight="500">
+<?xml version="1.0" encoding="UTF-8"?>
 
-    <Label text="Room Assignment" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" prefHeight="500" prefWidth="600" spacing="20" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.RoomAssignmentController">
+
+    <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Room Assignment" />
 
     <GridPane hgap="15" vgap="15">
         <columnConstraints>
-            <ColumnConstraints halignment="RIGHT" minWidth="100"/>
-            <ColumnConstraints minWidth="200"/>
+            <ColumnConstraints halignment="RIGHT" minWidth="100.0" />
+            <ColumnConstraints minWidth="200.0" />
+         <ColumnConstraints />
         </columnConstraints>
 
         <rowConstraints>
-            <RowConstraints minHeight="30"/>
-            <RowConstraints minHeight="30"/>
-            <RowConstraints minHeight="30"/>
-            <RowConstraints minHeight="30"/>
+            <RowConstraints minHeight="30.0" />
+            <RowConstraints minHeight="30.0" />
+            <RowConstraints minHeight="30.0" />
+            <RowConstraints minHeight="30.0" />
+         <RowConstraints />
         </rowConstraints>
 
-        <Label text="Student:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="studentComboBox" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <Label text="Student:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <ComboBox fx:id="studentComboBox" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-        <Label text="Dorm:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="dormComboBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <Label text="Dorm:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <ComboBox fx:id="dormComboBox" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-        <Label text="Room:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="roomComboBox" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label text="Room:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <ComboBox fx:id="roomComboBox" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-        <Label text="Assign Date:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <DatePicker fx:id="dateAssignedPicker" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Label text="Assign Date:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <DatePicker fx:id="dateAssignedPicker" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-        <Button text="Assign Room" onAction="#onAssignRoom" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-        <Button text="Back to Dashboard" onAction="#handleBackToDashboard" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+        <Button onAction="#onAssignRoom" text="Assign Room" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        <Button onAction="#handleBackToDashboard" text="Back to Dashboard" GridPane.columnIndex="2" GridPane.rowIndex="4" />
     </GridPane>
 
-    <Separator/>
+    <Separator />
 
     <TableView fx:id="assignmentTable" prefHeight="250">
         <columns>
-            <TableColumn fx:id="actionCol" text="Actions"/>
-            <TableColumn fx:id="colStudent" text="Student"/>
-            <TableColumn fx:id="colRoom" text="Room"/>
-            <TableColumn fx:id="colAssigned" text="Date Assigned"/>
-            <TableColumn fx:id="colVacated" text="Date Vacated"/>
+            <TableColumn fx:id="actionCol" text="Actions" />
+            <TableColumn fx:id="colStudent" text="Student" />
+            <TableColumn fx:id="colRoom" text="Room" />
+            <TableColumn fx:id="colAssigned" prefWidth="90.0" text="Date Assigned" />
+            <TableColumn fx:id="colVacated" text="Date Vacated" />
         </columns>
     </TableView>
 </VBox>

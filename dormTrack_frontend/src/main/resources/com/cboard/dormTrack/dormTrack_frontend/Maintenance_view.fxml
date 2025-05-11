@@ -1,45 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 
-<VBox spacing="15" xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.MaintenanceController"
-      style="-fx-padding: 20; -fx-background-color: #ffffff;">
+<VBox spacing="15" style="-fx-padding: 20; -fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cboard.dormTrack.dormTrack_frontend.controller.MaintenanceController">
 
-    <Label text="Open Maintenance Requests" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+    <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Open Maintenance Requests" />
 
     <TableView fx:id="maintenanceTable" prefHeight="300">
         <columns>
-            <TableColumn fx:id="studentCol" text="Student" prefWidth="150">
+            <TableColumn fx:id="studentCol" prefWidth="150" text="Student">
                 <cellValueFactory>
-                    <PropertyValueFactory property="studentName"/>
+                    <PropertyValueFactory property="studentName" />
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="issueCol" text="Issue" prefWidth="300">
+            <TableColumn fx:id="issueCol" prefWidth="338.0" text="Issue">
                 <cellValueFactory>
-                    <PropertyValueFactory property="issueDescription"/>
+                    <PropertyValueFactory property="issueDescription" />
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="statusCol" text="Status" prefWidth="100">
+            <TableColumn fx:id="statusCol" prefWidth="100" text="Status">
                 <cellValueFactory>
-                    <PropertyValueFactory property="status"/>
+                    <PropertyValueFactory property="status" />
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="dateCol" text="Date Submitted" prefWidth="150">
+            <TableColumn fx:id="dateCol" prefWidth="150" text="Date Submitted">
                 <cellValueFactory>
-                    <PropertyValueFactory property="dateSubmitted"/>
+                    <PropertyValueFactory property="dateSubmitted" />
                 </cellValueFactory>
             </TableColumn>
         </columns>
     </TableView>
 
     <HBox spacing="10">
-        <Button text="Back to Dashboard" onAction="#handleBackToDashboard"/>
-        <Button text="Resolve Selected Request" onAction="#handleCloseRequest"/>
-        <Button text="View Resolved Requests" onAction="#handleViewResolvedRequests"/>
+        <Button onAction="#handleBackToDashboard" text="Back to Dashboard" />
+        <Button onAction="#handleCloseRequest" text="Resolve Selected Request" />
+        <Button onAction="#handleViewResolvedRequests" text="View Resolved Requests" />
     </HBox>
 </VBox>

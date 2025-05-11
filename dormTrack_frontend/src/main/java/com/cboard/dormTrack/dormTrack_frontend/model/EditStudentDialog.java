@@ -54,7 +54,7 @@ public class EditStudentDialog {
                 student.setEmail(emailField.getText());
                 return student;
             } else if (button == deleteBtnType) {
-                student.setName(null); // Mark for deletion (optional convention)
+                student.setName(null);
                 return student;
             }
             return null;

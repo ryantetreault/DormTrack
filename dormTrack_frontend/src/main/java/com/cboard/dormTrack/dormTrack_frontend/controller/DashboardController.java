@@ -42,7 +42,7 @@ public class DashboardController {
 
     @FXML
     private void handleEvents(ActionEvent event) {
-        switchScene(event, "view/event_view.fxml");
+        switchScene(event, "/com/cboard/dormTrack/dormTrack_frontend/event_view.fxml");
     }
 
     private void switchScene(ActionEvent event, String fxmlPath) {
